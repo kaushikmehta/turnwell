@@ -3,4 +3,4 @@ dist
 .DS_Store
 *.log
 # Local folder for images and context ignored
-/local
+local
