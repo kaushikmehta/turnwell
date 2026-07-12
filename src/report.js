@@ -1,9 +1,54 @@
 /*
- * Physio/OT live session report — plain text, WhatsApp-friendly (no markdown).
+ * Session reports — plain text, WhatsApp-friendly (no markdown).
  * Copied to the clipboard rather than URL-encoded, so there's no length limit —
  * written to be read by a human (the coordinator, later you), not parsed by a script.
  */
+import { ratingByKey, supportWord, isDeck, isScene } from "./utils";
+
 const understandWord = { yes: "yes", partly: "partly", no: "no" };
+
+export function buildSpeechReport(rec, ratings, patientName = "Akki") {
+  const dt = new Date(rec.at || Date.now());
+  const dateStr = dt.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const timeStr = dt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+  const total = rec.results.length;
+  const counts = {};
+  rec.results.forEach((r) => { counts[r.rating] = (counts[r.rating] || 0) + 1; });
+  const avg = total ? rec.results.reduce((s, r) => s + ratingByKey(r.rating, ratings).score, 0) / total : 0;
+  const independent = counts.independent || 0;
+
+  const nDecks = (rec.items || []).filter(isDeck).length;
+  const nScenes = (rec.items || []).filter(isScene).length;
+  const nLines = (rec.items || []).length - nScenes - nDecks;
+  const madeOf = [nLines ? `${nLines} sentence${nLines > 1 ? "s" : ""}` : "", nScenes ? `${nScenes} scene${nScenes > 1 ? "s" : ""}` : "", nDecks ? `${nDecks} deck${nDecks > 1 ? "s" : ""}` : ""]
+    .filter(Boolean).join(", ");
+
+  const lines = [];
+  lines.push(`Turnwell — speech session with ${patientName}`);
+  lines.push(`${dateStr} at ${timeStr}`);
+  lines.push("");
+  lines.push(`${total} responses${madeOf ? ` across ${madeOf}` : ""}.`);
+  lines.push(`Full sentences unaided: ${independent}/${total}.`);
+  lines.push(`Typical support needed: ${supportWord(avg)}.`);
+  lines.push("");
+
+  lines.push("Breakdown:");
+  ratings.forEach((r) => { lines.push(`  ${r.label}: ${counts[r.key] || 0}`); });
+  lines.push("");
+
+  lines.push(`Responses (${total}):`);
+  lines.push("");
+  rec.results.forEach((r, i) => {
+    lines.push(`${i + 1}. ${r.prompt}`);
+    lines.push(`   ${ratingByKey(r.rating, ratings).label}`);
+  });
+
+  lines.push("");
+  lines.push(`Notes: ${rec.notes && rec.notes.trim() ? rec.notes.trim() : "—"}`);
+
+  return lines.join("\n");
+}
 
 export function buildPhysioReport(session, patientName = "Akki") {
   const { items, results, star, before, after, closing } = session;
