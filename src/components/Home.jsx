@@ -1,7 +1,6 @@
 import React from "react";
 import { C } from "../constants";
 import { Mark } from "./Shell";
-import { Ico } from "./shared";
 
 function TileBtn({ onClick, title, sub, foot }) {
   return (
@@ -16,7 +15,6 @@ function TileBtn({ onClick, title, sub, foot }) {
 
 export function Home({ bank, physioBank, sessions, domain, setDomain, go }) {
   const approvedSpeech = bank.filter((b) => b.approved).length;
-  const approvedPhysio = physioBank.filter((e) => e.approved).length;
 
   return (
     <div className="tw-rise">
@@ -46,24 +44,26 @@ export function Home({ bank, physioBank, sessions, domain, setDomain, go }) {
             display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 120 }}>
           <span>
             <span style={{ fontSize: 20, fontWeight: 700, display: "block" }}>Physio / OT</span>
-            <span style={{ fontSize: 13, opacity: .85, display: "block", marginTop: 4 }}>Exercises and stretches</span>
+            <span style={{ fontSize: 13, opacity: .85, display: "block", marginTop: 4 }}>Live session, facilitator-run</span>
           </span>
-          <span style={{ fontSize: 12.5, opacity: .7, marginTop: 12 }}>{approvedPhysio} ready</span>
+          <span style={{ fontSize: 12.5, opacity: .7, marginTop: 12 }}>{physioBank.length} drills seeded</span>
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
-        <TileBtn
-          onClick={() => go("library")}
-          title={domain === "physio" ? "Exercise library" : "Practice library"}
-          sub={domain === "physio" ? `${physioBank.length} exercises` : `${bank.length} prompts · ${approvedSpeech} approved`}
-          foot="Edit content, cues, and levels" />
-        <TileBtn
-          onClick={() => go("progress")}
-          title="This run"
-          sub={sessions.length ? `${sessions.length} session${sessions.length > 1 ? "s" : ""}` : "No sessions yet"}
-          foot="Sessions from this sitting — send each to the therapist to keep it" />
-      </div>
+      {domain === "speech" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+          <TileBtn
+            onClick={() => go("library")}
+            title="Practice library"
+            sub={`${bank.length} prompts · ${approvedSpeech} approved`}
+            foot="Edit content, cues, and levels" />
+          <TileBtn
+            onClick={() => go("progress")}
+            title="This run"
+            sub={sessions.length ? `${sessions.length} session${sessions.length > 1 ? "s" : ""}` : "No sessions yet"}
+            foot="Sessions from this sitting — send each to the therapist to keep it" />
+        </div>
+      )}
     </div>
   );
 }

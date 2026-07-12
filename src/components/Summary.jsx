@@ -17,8 +17,7 @@ export function Summary({ rec, home, again }) {
   const [phone, setPhone] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const ratings = rec.ratings || RATINGS;
-  const isPhysio = !!rec.ratings;
+  const ratings = RATINGS;
 
   const counts = {};
   rec.results.forEach((r) => { counts[r.rating] = (counts[r.rating] || 0) + 1; });
@@ -29,20 +28,18 @@ export function Summary({ rec, home, again }) {
   const nDecks = (rec.items || []).filter(isDeck).length;
   const nScenes = (rec.items || []).filter(isScene).length;
   const nLines = (rec.items || []).length - nScenes - nDecks;
-  const madeOf = isPhysio
-    ? `${(rec.items || []).length} exercise${(rec.items || []).length !== 1 ? "s" : ""}`
-    : [nLines ? `${nLines} sentence${nLines > 1 ? "s" : ""}` : "", nScenes ? `${nScenes} scene${nScenes > 1 ? "s" : ""}` : "", nDecks ? `${nDecks} deck${nDecks > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
+  const madeOf = [nLines ? `${nLines} sentence${nLines > 1 ? "s" : ""}` : "", nScenes ? `${nScenes} scene${nScenes > 1 ? "s" : ""}` : "", nDecks ? `${nDecks} deck${nDecks > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
 
-  const independentLabel = isPhysio ? "Active without assist" : "Full sentences on their own";
-  const supportLabel = isPhysio ? "Typical assist level" : "Typical support needed";
+  const independentLabel = "Full sentences on their own";
+  const supportLabel = "Typical support needed";
 
   const report = [
-    `Turnwell — ${isPhysio ? "physio" : "speech"} session summary`,
+    `Turnwell — speech session summary`,
     new Date(rec.at || Date.now()).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }),
     "",
     `${total} responses${madeOf ? " · " + madeOf : ""}`,
-    isPhysio ? `Active without assist: ${independent}/${total}` : `Full sentences unaided: ${independent}/${total}`,
-    `Typical ${isPhysio ? "assist" : "support"}: ${supportWord(avg)}`,
+    `Full sentences unaided: ${independent}/${total}`,
+    `Typical support: ${supportWord(avg)}`,
     "",
     "Breakdown:",
     ...ratings.map((r) => `• ${r.label}: ${counts[r.key] || 0}`),
@@ -67,7 +64,7 @@ export function Summary({ rec, home, again }) {
       <p style={{ color: C.inkSoft, margin: "0 0 22px", fontSize: 15 }}>{total} responses across {madeOf || "this session"}. Here's the report.</p>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-        <StatCard big={`${independent}/${total}`} label={independentLabel} color={isPhysio ? C.clay : C.sage} />
+        <StatCard big={`${independent}/${total}`} label={independentLabel} color={C.sage} />
         <StatCard big={supportWord(avg)} label={supportLabel} color={C.clay} />
       </div>
 

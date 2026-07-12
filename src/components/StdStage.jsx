@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { C, RATINGS } from "../constants";
-import { isScene, isExercise, cueLabels } from "../utils";
+import { isScene, cueLabels } from "../utils";
 import { Ico, BackBtn } from "./shared";
 
 export function StdStage({ run, setRun, finish, quit, ratings = RATINGS }) {
   const item = run.items[run.i];
   const scene = isScene(item);
-  const exercise = isExercise(item);
   const [stepIdx, setStepIdx] = useState(0);
   const [settingOpen, setSettingOpen] = useState(true);
   const [cue, setCue] = useState(0);
@@ -18,9 +17,7 @@ export function StdStage({ run, setRun, finish, quit, ratings = RATINGS }) {
   const taskPrompt = scene ? task.ask : item.prompt;
   const taskPersonal = scene ? !!task.personal : !!item.personal;
   const taskRecall = scene ? !!task.recall : false;
-  const labels = exercise
-    ? ["Verbal cue", "Guided assist", "Full assist"]
-    : cueLabels(taskPersonal);
+  const labels = cueLabels(taskPersonal);
 
   const resetTask = () => { setCue(0); setPeek(false); setShowSetting(false); };
   const scrollTop = () => { if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); };
@@ -34,7 +31,7 @@ export function StdStage({ run, setRun, finish, quit, ratings = RATINGS }) {
   };
 
   const record = (ratingKey) => {
-    const kind = scene ? "scene" : exercise ? "exercise" : "line";
+    const kind = scene ? "scene" : "line";
     const results = [...run.results,
       { itemId: item.id, kind, prompt: taskPrompt, rating: ratingKey, cueUsed: cue, step: scene ? stepIdx : 0 }];
     const lastStep = !scene || stepIdx + 1 >= item.steps.length;
@@ -65,16 +62,12 @@ export function StdStage({ run, setRun, finish, quit, ratings = RATINGS }) {
 
       {/* context row */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-        {exercise
-          ? <span className="tw-eyebrow" style={{ color: C.clay }}>{item.area}</span>
-          : <span className="tw-eyebrow" style={{ color: C.sage }}>{item.area}</span>}
+        <span className="tw-eyebrow" style={{ color: C.sage }}>{item.area}</span>
         <span style={{ color: C.line }}>·</span>
         {scene ? (
           <span style={{ fontSize: 12, color: C.stone, fontWeight: 600 }}>
             Scene{readingSetting ? "" : ` · task ${stepIdx + 1} of ${item.steps.length}`}
           </span>
-        ) : exercise ? (
-          <span style={{ fontSize: 12, color: C.stone, fontWeight: 600 }}>{run.i + 1} of {total}</span>
         ) : (
           <span style={{ fontSize: 12, color: C.stone, fontWeight: 600 }}>{run.i + 1} of {total}</span>
         )}
@@ -120,17 +113,10 @@ export function StdStage({ run, setRun, finish, quit, ratings = RATINGS }) {
             <p className="tw-serif" style={{ fontSize: "clamp(23px,5.2vw,36px)", lineHeight: 1.26, margin: 0, fontWeight: 500 }}>{taskPrompt}</p>
           </div>
 
-          {exercise && item.instruction && (
-            <div className="tw-rise" style={{ marginTop: 12, borderRadius: 14, padding: "13px 16px", background: C.sageTint, border: `1px solid ${C.sage}33` }}>
-              <span style={{ fontSize: 12, color: C.sageDeep, fontWeight: 700 }}>Instructions: </span>
-              <span style={{ fontSize: 14, color: C.ink, lineHeight: 1.45 }}>{item.instruction}</span>
-            </div>
-          )}
-
           {cue > 0 && (
             <div className="tw-rise" key={cue} style={{ marginTop: 14, background: cueTone, borderRadius: 18, padding: "18px 20px", border: `1px solid ${cueText}22` }}>
               <div className="tw-eyebrow" style={{ color: cueText, marginBottom: 8, opacity: .85 }}>
-                {exercise ? `Level ${cue} assist` : `Hint ${cue}`} · {labels[cue - 1]}
+                Hint {cue} · {labels[cue - 1]}
               </div>
               <p style={{ fontSize: "clamp(18px,4vw,26px)", lineHeight: 1.3, margin: 0, color: C.ink, fontWeight: 500 }}>{task.cues[cue - 1]}</p>
             </div>
@@ -145,9 +131,7 @@ export function StdStage({ run, setRun, finish, quit, ratings = RATINGS }) {
 
           {peek && (
             <div className="tw-rise" style={{ marginTop: 12, borderRadius: 14, padding: "12px 15px", background: "#fff", border: `1px dashed ${C.stone}` }}>
-              <span style={{ fontSize: 12, color: C.stone, fontWeight: 600 }}>
-                {exercise ? "Target (facilitator only): " : "Model answer (facilitator only): "}
-              </span>
+              <span style={{ fontSize: 12, color: C.stone, fontWeight: 600 }}>Model answer (facilitator only): </span>
               <span style={{ fontSize: 15, color: C.ink }}>{task.target}</span>
             </div>
           )}
@@ -160,9 +144,7 @@ export function StdStage({ run, setRun, finish, quit, ratings = RATINGS }) {
                 {[0, 1, 2].map((r) => (
                   <span key={r} title={labels[r]} style={{ width: 9, height: 9, borderRadius: 3, background: cue > r ? C.clay : C.line }} />
                 ))}
-                <span style={{ fontSize: 11.5, color: C.stone, marginLeft: 4 }}>
-                  {exercise ? "assist ladder" : "support ladder"}
-                </span>
+                <span style={{ fontSize: 11.5, color: C.stone, marginLeft: 4 }}>support ladder</span>
               </div>
             </div>
 
@@ -172,11 +154,7 @@ export function StdStage({ run, setRun, finish, quit, ratings = RATINGS }) {
                   background: cue >= 3 ? C.line : C.clayTint, color: cue >= 3 ? C.stone : C.clayDeep,
                   border: `1.5px solid ${cue >= 3 ? C.line : C.clay}`, borderRadius: 13, padding: "13px 16px", fontSize: 15, fontWeight: 700 }}>
                 {Ico.hand}
-                {cue === 0
-                  ? (exercise ? "Offer a cue" : "Offer a hint")
-                  : cue >= 3
-                  ? "All cues given"
-                  : `${exercise ? "Next assist" : "Next hint"} · ${labels[cue]}`}
+                {cue === 0 ? "Offer a hint" : cue >= 3 ? "All cues given" : `Next hint · ${labels[cue]}`}
               </button>
               {scene && (
                 <button className="tw-focus" onClick={() => setShowSetting(!showSetting)}
@@ -188,7 +166,7 @@ export function StdStage({ run, setRun, finish, quit, ratings = RATINGS }) {
               <button className="tw-focus" onClick={() => setPeek(!peek)}
                 style={{ display: "inline-flex", alignItems: "center", gap: 7, background: C.surface, color: C.inkSoft,
                   border: `1.5px solid ${C.line}`, borderRadius: 13, padding: "13px 16px", fontSize: 14, fontWeight: 600 }}>
-                {Ico.eye}{peek ? "Hide" : (exercise ? "Peek at target" : "Peek at answer")}
+                {Ico.eye}{peek ? "Hide" : "Peek at answer"}
               </button>
               <button className="tw-focus" onClick={skip}
                 style={{ display: "inline-flex", alignItems: "center", gap: 7, background: C.surface, color: C.stone,
@@ -198,7 +176,7 @@ export function StdStage({ run, setRun, finish, quit, ratings = RATINGS }) {
             </div>
 
             <div style={{ fontSize: 13, color: C.inkSoft, marginBottom: 10, fontWeight: 600 }}>
-              {exercise ? "How much assist did they need?" : taskRecall ? "How much did they recall?" : "How did the response go?"}
+              {taskRecall ? "How much did they recall?" : "How did the response go?"}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 9 }}>
               {ratings.map((r) => (

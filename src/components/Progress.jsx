@@ -19,13 +19,12 @@ export function Progress({ sessions, clear, back }) {
           <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "20px 18px 14px", marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 130 }}>
               {[...sessions].slice(0, 12).reverse().map((s, i) => {
-                const sessionRatings = s.ratings || RATINGS;
                 const total = s.results.length || 1;
-                const avg = s.results.reduce((a, r) => a + ratingByKey(r.rating, sessionRatings).score, 0) / total;
+                const avg = s.results.reduce((a, r) => a + (ratingByKey(r.rating, RATINGS)?.score || 0), 0) / total;
                 const h = 14 + (1 - avg / 4) * 100;
                 return (
                   <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                    <span style={{ width: "100%", maxWidth: 34, height: h, background: s.ratings ? C.clay : C.sage, borderRadius: "5px 5px 0 0", opacity: .55 + (h / 200) }} />
+                    <span style={{ width: "100%", maxWidth: 34, height: h, background: C.sage, borderRadius: "5px 5px 0 0", opacity: .55 + (h / 200) }} />
                     <span style={{ fontSize: 10, color: C.stone }}>{new Date(s.at).toLocaleDateString(undefined, { month: "numeric", day: "numeric" })}</span>
                   </div>
                 );
@@ -37,16 +36,15 @@ export function Progress({ sessions, clear, back }) {
           {sessions.map((s, i) => {
             const total = s.results.length;
             const ind = s.results.filter((r) => r.rating === "independent").length;
-            const isPhysio = !!s.ratings;
             return (
               <div key={i} style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 14, padding: "14px 16px", marginBottom: 10 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <span style={{ fontSize: 14, fontWeight: 700 }}>{new Date(s.at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span>
-                    <span style={{ fontSize: 12, color: isPhysio ? C.clay : C.sage, fontWeight: 600, marginLeft: 8 }}>{isPhysio ? "physio" : "speech"}</span>
+                    <span style={{ fontSize: 12, color: C.sage, fontWeight: 600, marginLeft: 8 }}>speech</span>
                   </div>
-                  <span style={{ fontSize: 13, color: isPhysio ? C.clay : C.sage, fontWeight: 700 }}>
-                    {ind}/{total} {isPhysio ? "active" : "on their own"}
+                  <span style={{ fontSize: 13, color: C.sage, fontWeight: 700 }}>
+                    {ind}/{total} on their own
                   </span>
                 </div>
                 {s.notes && <p style={{ fontSize: 13, color: C.inkSoft, margin: "8px 0 0", lineHeight: 1.4 }}>{s.notes}</p>}

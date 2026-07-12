@@ -2,7 +2,6 @@ import { RATINGS } from "./constants";
 
 export const isScene = (it) => it && (it.type === "scene" || !!it.steps);
 export const isDeck = (it) => it && (it.type === "deck" || !!it.cards);
-export const isExercise = (it) => it && it.type === "exercise";
 
 export const ratingByKey = (k, ratings = RATINGS) => ratings.find((r) => r.key === k);
 

@@ -1,34 +1,58 @@
 import React, { useState } from "react";
-import { C, PHASE_ORDER, PHASE_LABELS } from "../constants";
-import { BackBtn, SectionLabel, Ico } from "./shared";
+import { C, MINUTES_PER_EXERCISE } from "../constants";
+import { BackBtn, SectionLabel, Field, inputStyle } from "./shared";
+
+let customIdSeq = 0;
 
 export function PhysioSetup({ physioBank, start, back }) {
-  const approved = physioBank.filter((e) => e.approved);
-  const [selected, setSelected] = useState(new Set(approved.map((e) => e.id)));
+  const [selected, setSelected] = useState([]); // ordered array of exercise objects (seeded or custom)
+  const [dualTask, setDualTask] = useState({}); // id -> bool
+  const [firstSession, setFirstSession] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customTitle, setCustomTitle] = useState("");
+  const [customInstructions, setCustomInstructions] = useState("");
 
-  const toggle = (id) => {
-    const n = new Set(selected);
-    n.has(id) ? n.delete(id) : n.add(id);
-    setSelected(n);
+  const isSelected = (id) => selected.some((s) => s.id === id);
+
+  const toggleSeeded = (ex) => {
+    if (isSelected(ex.id)) {
+      setSelected(selected.filter((s) => s.id !== ex.id));
+    } else if (selected.length < 4) {
+      setSelected([...selected, ex]);
+      setDualTask((d) => ({ ...d, [ex.id]: ex.defaultDualTask }));
+    }
   };
 
-  const togglePhase = (phase) => {
-    const ids = approved.filter((e) => e.phase === phase).map((e) => e.id);
-    const allOn = ids.every((id) => selected.has(id));
-    const n = new Set(selected);
-    ids.forEach((id) => (allOn ? n.delete(id) : n.add(id)));
-    setSelected(n);
+  const addCustom = () => {
+    if (!customTitle.trim() || selected.length >= 4) return;
+    const id = "custom-" + Date.now() + "-" + customIdSeq++;
+    const ex = {
+      id, title: customTitle.trim(), kind: "custom",
+      instructions: customInstructions.trim(), cues: [], watchFor: "", mediaUrl: "", defaultDualTask: false,
+    };
+    setSelected([...selected, ex]);
+    setDualTask((d) => ({ ...d, [id]: false }));
+    setCustomTitle(""); setCustomInstructions(""); setCustomOpen(false);
   };
 
-  const count = PHASE_ORDER.reduce(
-    (sum, phase) => sum + approved.filter((e) => e.phase === phase && selected.has(e.id)).length, 0
-  );
+  const toggleDualTask = (id) => setDualTask((d) => ({ ...d, [id]: !d[id] }));
+
+  const moveSelected = (index, dir) => {
+    const to = index + dir;
+    if (to < 0 || to >= selected.length) return;
+    const next = [...selected];
+    [next[index], next[to]] = [next[to], next[index]];
+    setSelected(next);
+  };
+
+  const count = selected.length;
+  const estMinutes = count * MINUTES_PER_EXERCISE;
+  const overTarget = estMinutes > 40;
+  const canBegin = count >= 2 && count <= 4;
 
   const begin = () => {
-    const items = PHASE_ORDER.flatMap((phase) =>
-      approved.filter((e) => e.phase === phase && selected.has(e.id))
-    );
-    start(items);
+    const items = selected.map((ex) => ({ ...ex, dualTask: !!dualTask[ex.id] }));
+    start({ items, firstSession });
   };
 
   return (
@@ -36,49 +60,127 @@ export function PhysioSetup({ physioBank, start, back }) {
       <BackBtn onClick={back} />
       <h2 className="tw-serif" style={{ fontSize: 28, margin: "12px 0 4px" }}>Set up the session</h2>
       <p style={{ color: C.inkSoft, margin: "0 0 20px", fontSize: 15 }}>
-        Select exercises for today. They run in order: warm-up → active → cool-down.
+        Pick 2–4 exercises for today. You run this live, side by side with Akki.
       </p>
 
-      {PHASE_ORDER.map((phase) => {
-        const exercises = approved.filter((e) => e.phase === phase);
-        if (!exercises.length) return null;
-        const allOn = exercises.every((e) => selected.has(e.id));
-        return (
-          <div key={phase} style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <SectionLabel>{PHASE_LABELS[phase]}</SectionLabel>
-              <button className="tw-focus" onClick={() => togglePhase(phase)}
-                style={{ fontSize: 12.5, fontWeight: 700, color: C.sage, background: "none", border: "none", padding: "2px 4px" }}>
-                {allOn ? "Deselect all" : "Select all"}
+      <label className="tw-focus" style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", marginBottom: 20 }}>
+        <input type="checkbox" checked={firstSession} onChange={() => setFirstSession(!firstSession)}
+          style={{ width: 18, height: 18, accentColor: C.clay }} />
+        <span style={{ fontSize: 14, fontWeight: 600, color: C.ink }}>First session</span>
+        <span style={{ fontSize: 12.5, color: C.stone }}>— skips "recall last time" at the opening</span>
+      </label>
+
+      <SectionLabel>Exercises</SectionLabel>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+        {physioBank.map((ex) => {
+          const on = isSelected(ex.id);
+          const disabled = !on && count >= 4;
+          return (
+            <div key={ex.id} style={{ background: on ? C.clayTint : C.surface, border: `1.5px solid ${on ? C.clay : C.line}`,
+              borderRadius: 14, padding: "13px 15px", opacity: disabled ? .5 : 1 }}>
+              <label className="tw-focus" style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: disabled ? "default" : "pointer" }}>
+                <input type="checkbox" checked={on} disabled={disabled} onChange={() => toggleSeeded(ex)}
+                  style={{ width: 18, height: 18, accentColor: C.clay, marginTop: 2, flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>{ex.title}</div>
+                  <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>
+                    {ex.instructions.length > 100 ? ex.instructions.slice(0, 100) + "…" : ex.instructions}
+                  </div>
+                </div>
+              </label>
+              {on && (
+                <label className="tw-focus" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, paddingLeft: 30, cursor: "pointer" }}>
+                  <input type="checkbox" checked={!!dualTask[ex.id]} onChange={() => toggleDualTask(ex.id)}
+                    style={{ width: 16, height: 16, accentColor: C.sage }} />
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: C.sageDeep }}>Dual-task this one</span>
+                </label>
+              )}
+            </div>
+          );
+        })}
+
+        {selected.filter((s) => s.kind === "custom").map((ex) => (
+          <div key={ex.id} style={{ background: C.clayTint, border: `1.5px solid ${C.clay}`, borderRadius: 14, padding: "13px 15px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>{ex.title} <span style={{ fontSize: 11, color: C.stone, fontWeight: 600 }}>· typed in</span></div>
+                {ex.instructions && <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 3 }}>{ex.instructions}</div>}
+              </div>
+              <button className="tw-focus" onClick={() => setSelected(selected.filter((s) => s.id !== ex.id))}
+                style={{ background: "none", border: "none", color: C.stone, fontSize: 12.5, fontWeight: 600 }}>Remove</button>
+            </div>
+            <label className="tw-focus" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, cursor: "pointer" }}>
+              <input type="checkbox" checked={!!dualTask[ex.id]} onChange={() => toggleDualTask(ex.id)}
+                style={{ width: 16, height: 16, accentColor: C.sage }} />
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: C.sageDeep }}>Dual-task this one</span>
+            </label>
+          </div>
+        ))}
+      </div>
+
+      {count < 4 && (
+        customOpen ? (
+          <div style={{ background: C.surface, border: `1px dashed ${C.line}`, borderRadius: 14, padding: "14px 15px", marginBottom: 20 }}>
+            <Field label="Exercise name">
+              <input value={customTitle} onChange={(e) => setCustomTitle(e.target.value)} style={inputStyle} placeholder="e.g. Standing side-taps" />
+            </Field>
+            <Field label="Instructions (optional)">
+              <textarea value={customInstructions} onChange={(e) => setCustomInstructions(e.target.value)} rows={2} style={inputStyle} />
+            </Field>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="tw-focus tw-lift" disabled={!customTitle.trim()} onClick={addCustom}
+                style={{ flex: 1, background: customTitle.trim() ? C.clay : C.line, color: customTitle.trim() ? "#fff" : C.inkSoft,
+                  border: "none", borderRadius: 12, padding: "12px", fontSize: 14.5, fontWeight: 700 }}>
+                Add to session
+              </button>
+              <button className="tw-focus" onClick={() => setCustomOpen(false)}
+                style={{ background: "none", border: `1.5px solid ${C.line}`, color: C.stone, borderRadius: 12, padding: "12px 16px", fontSize: 14, fontWeight: 600 }}>
+                Cancel
               </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {exercises.map((e) => (
-                <label key={e.id} className="tw-focus"
-                  style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer",
-                    background: selected.has(e.id) ? C.sageTint : C.surface,
-                    border: `1.5px solid ${selected.has(e.id) ? C.sage : C.line}`,
-                    borderRadius: 14, padding: "13px 15px" }}>
-                  <input type="checkbox" checked={selected.has(e.id)} onChange={() => toggle(e.id)}
-                    style={{ width: 18, height: 18, accentColor: C.sage, marginTop: 2, flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>{e.prompt}</div>
-                    <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>
-                      {e.instruction.length > 90 ? e.instruction.slice(0, 90) + "…" : e.instruction}
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
           </div>
-        );
-      })}
+        ) : (
+          <button className="tw-focus" onClick={() => setCustomOpen(true)}
+            style={{ fontSize: 13.5, fontWeight: 600, color: C.sage, background: "none", border: "none", padding: "6px 2px", marginBottom: 20 }}>
+            + Type in a new exercise
+          </button>
+        )
+      )}
 
-      <button className="tw-focus tw-lift" disabled={count === 0} onClick={begin}
-        style={{ width: "100%", background: count ? C.clay : C.line, color: count ? "#fff" : C.inkSoft,
+      {selected.length > 1 && (
+        <>
+          <SectionLabel>Session order</SectionLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
+            {selected.map((ex, i) => (
+              <div key={ex.id} style={{ display: "flex", alignItems: "center", gap: 10,
+                background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "9px 10px 9px 15px" }}>
+                <span style={{ fontSize: 12.5, color: C.stone, fontWeight: 700, width: 16 }}>{i + 1}</span>
+                <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: C.ink }}>{ex.title}</span>
+                <button className="tw-focus" disabled={i === 0} onClick={() => moveSelected(i, -1)}
+                  style={{ background: "none", border: `1.5px solid ${C.line}`, borderRadius: 9, width: 30, height: 30,
+                    color: i === 0 ? C.line : C.inkSoft, fontSize: 14, fontWeight: 700, lineHeight: 1 }}>↑</button>
+                <button className="tw-focus" disabled={i === selected.length - 1} onClick={() => moveSelected(i, 1)}
+                  style={{ background: "none", border: `1.5px solid ${C.line}`, borderRadius: 9, width: 30, height: 30,
+                    color: i === selected.length - 1 ? C.line : C.inkSoft, fontSize: 14, fontWeight: 700, lineHeight: 1 }}>↓</button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: overTarget ? C.clayTint : C.sageTint, borderRadius: 12, padding: "10px 14px", marginBottom: 20 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: overTarget ? C.clayDeep : C.sageDeep }}>
+          Estimated length: ~{estMinutes} min
+        </span>
+        {overTarget && <span style={{ fontSize: 12, color: C.clayDeep, fontWeight: 600 }}>over the ~40 min target</span>}
+      </div>
+
+      <button className="tw-focus tw-lift" disabled={!canBegin} onClick={begin}
+        style={{ width: "100%", background: canBegin ? C.clay : C.line, color: canBegin ? "#fff" : C.inkSoft,
           border: "none", borderRadius: 16, padding: "17px", fontSize: 17, fontWeight: 700,
-          boxShadow: count ? `0 3px 0 ${C.clayDeep}` : "none" }}>
-        {count ? `Begin session · ${count} exercise${count > 1 ? "s" : ""}` : "Select at least one exercise"}
+          boxShadow: canBegin ? `0 3px 0 ${C.clayDeep}` : "none" }}>
+        {canBegin ? `Begin session · ${count} exercises` : `Pick 2–4 exercises (${count} selected)`}
       </button>
     </div>
   );

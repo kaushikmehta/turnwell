@@ -1,4 +1,4 @@
-import { DECK_RUNGS, DECK_CHEER, PHASE_ORDER } from "./constants";
+import { DECK_RUNGS, DECK_CHEER } from "./constants";
 
 /* ---- sentences ---- */
 export const seedLines = () => [
@@ -257,130 +257,102 @@ export const seedDecks = () => ([
   },
 ]);
 
-/* ---- exercises (physio/OT) ---- */
-export const seedExercises = () => [
-  // Warm-up
-  { id: "e0", type: "exercise", phase: "warmup", area: "Ankles", level: 1, approved: true,
-    prompt: "Ankle circles",
-    instruction: "Support Akki's foot, lift it slightly, and gently rotate the ankle — 5 times clockwise, then 5 anti-clockwise. Both feet.",
-    target: "5 circles each direction, each ankle, passive.",
+/* ---- physio/OT exercise drills (live session runner) ----
+   Drawn from the Therapist Field Guide (cognitive therapist's session structure)
+   and the whiteboard session notes — lower-limb initiation, trunk/weight-shifts,
+   arms, and TRAM standing.
+
+   mediaUrl is a slot only — this repo deploys to a PUBLIC GitHub Pages site, so
+   NEVER commit photos or GIFs of Akki to it. Leave mediaUrl empty; if a private
+   host exists later, point the string at that URL, not at anything in this repo. */
+export const seedPhysioExercises = () => [
+  {
+    id: "knee-extension-evoke", title: "Knee extension — evoke (inner range)", kind: "initiation",
+    instructions: "Supine with a rolled towel under the knee (slight bend), leg supported. One hand under the knee/roll; the other lightly over the quadriceps, or under the heel to feel it lift.",
     cues: [
-      "Verbal: 'I'm going to move your foot in a slow circle — just relax and let me guide it.'",
-      "If resistant: slow right down, hold at end of range for 3 seconds before moving on.",
-      "If very tight: reduce to 3 rotations, focus on the tightest direction only.",
+      "Straighten your knee — press the back of it into the roll",
+      "Make your leg long and straight",
+      "Push the roll down and lift your heel",
     ],
+    watchFor: "WORKING = quadriceps contraction / heel lift he starts, even a flicker. COMPENSATION = pushing the whole leg down from the hip without the knee straightening.",
+    mediaUrl: "", defaultDualTask: false,
   },
-  { id: "e1", type: "exercise", phase: "warmup", area: "Ankles", level: 1, approved: true,
-    prompt: "Ankle dorsiflexion stretch",
-    instruction: "Hold Akki's foot with one hand behind the heel and one on top of the toes. Gently push the toes toward the shin and hold for 30 seconds. Both feet.",
-    target: "30-second sustained hold, each ankle.",
+  {
+    id: "ankle-dorsiflexion-evoke", title: "Ankle dorsiflexion — evoke", kind: "initiation",
+    instructions: "Seated or supine, foot free of support. One hand resting lightly on top of the foot/shin — not guiding, just there to feel for movement.",
     cues: [
-      "Verbal: 'I'm going to stretch your ankle up slowly — tell me if it's uncomfortable.'",
-      "If spasm: hold the stretch gently, don't push through it — wait for the muscle to release.",
-      "Reduce hold to 15 seconds if too uncomfortable.",
+      "Pull your toes up towards your knee",
+      "Lift the front of your foot, heel stays down",
+      "Point your toes up towards the ceiling",
     ],
+    watchFor: "WORKING = toes/foot lifting from the ankle, even a small flicker. COMPENSATION = the whole leg lifting from the hip, or the knee bending to substitute.",
+    mediaUrl: "", defaultDualTask: false,
   },
-  { id: "e2", type: "exercise", phase: "warmup", area: "Shoulders", level: 1, approved: true,
-    prompt: "Shoulder shrugs",
-    instruction: "Ask Akki to shrug both shoulders up toward the ears, hold for 2 seconds, then release slowly. 10 repetitions. Assist if needed.",
-    target: "10 shrugs, slow and controlled.",
+  {
+    id: "seated-weight-shifts", title: "Seated weight-shifts", kind: "strength",
+    instructions: "Seated on a firm surface, feet flat, hands resting on thighs. Sit beside or behind for light contact guarding at the hips.",
     cues: [
-      "Verbal: 'Bring your shoulders up to your ears — hold — now slowly let them drop.'",
-      "Assist: Gently place hands on shoulders and guide the movement.",
-      "Reduce to 5 repetitions if fatigued.",
+      "Shift your weight over to your right",
+      "Now come back to the middle",
+      "Shift over to your left, and back to the middle",
     ],
+    watchFor: "WORKING = a controlled weight transfer through the pelvis with the trunk staying upright. COMPENSATION = leaning/collapsing sideways from the shoulders, or propping on the arms.",
+    mediaUrl: "", defaultDualTask: true,
   },
-  { id: "e3", type: "exercise", phase: "warmup", area: "Wrists", level: 1, approved: true,
-    prompt: "Wrist circles",
-    instruction: "Hold Akki's forearm steady and gently rotate the wrist — 5 circles each direction. Right wrist first, then left (go gently on the left — high tone).",
-    target: "5 circles each direction, each wrist, passive.",
+  {
+    id: "trunk-rotation-reach", title: "Trunk rotation — reach-outs", kind: "strength",
+    instructions: "Seated, an object placed just outside reach to one side (e.g. the AC remote). Guard at the trunk if needed.",
     cues: [
-      "Verbal: 'I'm going to gently roll your wrist around. Just let your hand hang loose.'",
-      "Left wrist: move slower, reduce range if tone is high — small smooth circles only.",
-      "If grip is clenched: gently extend the fingers first before starting.",
+      "Reach out and pick it up",
+      "Turn and reach — keep your bottom on the seat",
+      "Bring it back to the middle",
     ],
+    watchFor: "WORKING = rotation through the trunk with a controlled reach and return. COMPENSATION = standing up to reach, or overbalancing without catching himself.",
+    mediaUrl: "", defaultDualTask: true,
   },
-  // Active
-  { id: "e4", type: "exercise", phase: "active", area: "Right arm", level: 2, approved: true,
-    prompt: "Right arm reach to cup",
-    instruction: "Place a cup at elbow-distance away. Guide the right arm to reach out, grasp the cup, and return it. 5–8 repetitions.",
-    target: "5 full reach-and-return movements, with decreasing assist over the set.",
+  {
+    id: "arm-reach-to-target", title: "Arm reach to target", kind: "strength",
+    instructions: "Seated, a cup or object placed at arm's length. Support at the elbow if needed.",
     cues: [
-      "Verbal: 'Reach your right hand out to the cup — stretch forward and take it.'",
-      "Assist: Guide the elbow forward with one hand, support at the wrist with the other.",
-      "If unable to extend fully: reduce to a partial reach — elbow to hip extension only.",
+      "Reach your hand out to the cup",
+      "Stretch all the way — straighten your elbow",
+      "Bring it back slowly",
     ],
+    watchFor: "WORKING = a controlled reach-and-return with the elbow extending. COMPENSATION = the trunk leaning forward to substitute for arm reach.",
+    mediaUrl: "", defaultDualTask: false,
   },
-  { id: "e5", type: "exercise", phase: "active", area: "Right arm", level: 2, approved: true,
-    prompt: "Right hand grip squeeze",
-    instruction: "Roll a small towel tightly and place it in Akki's right hand. Ask him to squeeze it 10 times, holding each squeeze for 2 seconds.",
-    target: "10 squeezes, 2-second hold each.",
+  {
+    id: "grip-squeeze", title: "Grip squeeze", kind: "strength",
+    instructions: "A rolled towel or soft ball placed in the hand.",
     cues: [
-      "Verbal: 'Squeeze the towel as hard as you can — hold it — and release slowly.'",
-      "Assist: Place your hand over his and guide the grip pattern if he can't initiate.",
-      "Reduce to 5 squeezes if fatigued; check wrist position.",
+      "Squeeze it as hard as you can",
+      "Hold it",
+      "Now let go slowly",
     ],
+    watchFor: "WORKING = a full, sustained squeeze with a controlled release. COMPENSATION = using the other hand to help close the grip.",
+    mediaUrl: "", defaultDualTask: false,
   },
-  { id: "e6", type: "exercise", phase: "active", area: "Left arm", level: 2, approved: true,
-    prompt: "Left arm weight-bearing",
-    instruction: "Seated, guide Akki's left hand flat onto the surface beside his hip. Apply gentle downward pressure through the arm (straight elbow). Hold 20 seconds. Repeat 3 times.",
-    target: "3 × 20-second weight-bearing holds.",
+  {
+    id: "tram-weight-bearing", title: "TRAM weight-bearing", kind: "strength",
+    instructions: "In the TRAM, feet flat and hip-width apart, harness supporting his weight.",
     cues: [
-      "Verbal: 'I'm going to put your left hand down here — try to keep it flat and press gently.'",
-      "Help by: straightening the elbow fully (slow, sustained), then guide the hand flat.",
-      "If tone is very high: stretch the elbow first for 30 seconds before attempting weight-bearing.",
+      "Push down through both feet",
+      "Stand up tall",
+      "Hold — feel your legs taking the weight",
     ],
+    watchFor: "WORKING = an active push through the legs with the knees not buckling. COMPENSATION = hanging in the harness with no active push.",
+    mediaUrl: "", defaultDualTask: false,
   },
-  { id: "e7", type: "exercise", phase: "active", area: "Left arm", level: 2, approved: true,
-    prompt: "Left elbow extension stretch",
-    instruction: "Hold Akki's left wrist and gently straighten the elbow fully. Hold the stretch for 30–60 seconds. Move slowly — this reduces tone.",
-    target: "Full (or near-full) elbow extension, held 30–60 seconds.",
+  {
+    id: "tram-knee-lock", title: "TRAM knee-lock hold", kind: "initiation",
+    instructions: "In the TRAM, standing supported.",
     cues: [
-      "Verbal: 'I'm going to straighten your arm slowly — let it go loose, don't resist.'",
-      "If resistance: pause, hold current position, wait 10–15 seconds for tone to reduce, then continue.",
-      "Reduce to 20 seconds if uncomfortable — build over sessions.",
+      "Straighten your knees",
+      "Lock them — feel them go straight",
+      "Hold it there",
     ],
-  },
-  { id: "e8", type: "exercise", phase: "active", area: "Trunk / transfers", level: 3, approved: true,
-    prompt: "Sit-to-stand transfer",
-    instruction: "Two-person assist. Akki's feet flat on floor, knees at 90°. On 'ready, steady, stand' — support under the arms and at the hips to bring him to full standing. Hold 10–20 seconds. Lower back slowly.",
-    target: "One full sit-to-stand and return, with controlled landing.",
-    cues: [
-      "Verbal: 'We're going to stand together — lean forward first, then push up through your feet.'",
-      "Transfer weight forward over feet before lifting — don't pull up from the trunk.",
-      "If standing not possible today: practice weight-shifting in sitting — lean forward, hold, return.",
-    ],
-  },
-  { id: "e9", type: "exercise", phase: "active", area: "Trunk", level: 2, approved: true,
-    prompt: "Seated forward reach",
-    instruction: "Ask Akki to reach both hands toward his knees (progressing to shins). Hold 5 seconds. Return to upright. 8 repetitions.",
-    target: "8 forward reaches, as far as he can comfortably reach.",
-    cues: [
-      "Verbal: 'Reach your hands toward your knees — lean forward and hold it.'",
-      "Assist: Guide hands forward and place on knees; support the trunk on the way back up.",
-      "Reduce to 4 repetitions if trunk fatigue is visible.",
-    ],
-  },
-  // Cool-down
-  { id: "e10", type: "exercise", phase: "cooldown", area: "Left arm", level: 1, approved: true,
-    prompt: "Left arm sustained stretch",
-    instruction: "Elbow straight, wrist in neutral, forearm facing up. Hold for 60 seconds. Prolonged low-load stretch to reduce baseline tone in the left arm.",
-    target: "60-second sustained stretch, elbow straight.",
-    cues: [
-      "Verbal: 'I'm going to keep your arm straight for a minute — just breathe and let it relax.'",
-      "If tone builds: apply slow, gentle counter-pressure at the elbow — hold, don't push.",
-      "Reduce to 30 seconds if uncomfortable; aim to build to 60 over sessions.",
-    ],
-  },
-  { id: "e11", type: "exercise", phase: "cooldown", area: "Full body", level: 1, approved: true,
-    prompt: "Breathing and relaxation",
-    instruction: "Ask Akki to take 5 slow, deep breaths — in through the nose, out through the mouth. Sit quietly together.",
-    target: "5 full breaths, relaxed position.",
-    cues: [
-      "Verbal: 'Let's take some slow breaths together — in through your nose… and out slowly.'",
-      "Model the breathing alongside him.",
-      "After breathing: note energy level, tone, and mood for the session record.",
-    ],
+    watchFor: "WORKING = active knee extension held without support. COMPENSATION = the knees staying bent, or buckling under load.",
+    mediaUrl: "", defaultDualTask: false,
   },
 ];
 
