@@ -357,3 +357,250 @@ export const seedPhysioExercises = () => [
 ];
 
 export const seed = () => [...seedLines(), ...seedScenes(), ...seedDecks()];
+
+/* ---- reading & comprehension ----
+   Increasing difficulty: level 1 is one literal sentence, level 4 asks for a
+   light inference across a short sequence. Each question carries its own
+   escalating cues (starter → fill-in → re-read the relevant line). */
+export const seedReadingPassages = () => [
+  {
+    id: "r0", level: 1,
+    text: "Priya made tea and gave a cup to her father.",
+    questions: [
+      { q: "Who did Priya give the tea to?", target: "Her father",
+        cues: ["Think about who else is in the sentence with Priya.", "She gave it to her ___.", "Let's re-read: “…gave a cup to her father.”"] },
+    ],
+  },
+  {
+    id: "r1", level: 1,
+    text: "The dog ran into the garden and barked at the cat.",
+    questions: [
+      { q: "What did the dog bark at?", target: "The cat",
+        cues: ["Think about what else was in the garden.", "The dog barked at the ___.", "Let's re-read: “…barked at the cat.”"] },
+    ],
+  },
+  {
+    id: "r2", level: 2,
+    text: "Rahul went to the market to buy vegetables. He forgot to buy onions.",
+    questions: [
+      { q: "Where did Rahul go?", target: "The market",
+        cues: ["Think about the place mentioned first.", "Rahul went to the ___.", "Let's re-read: “Rahul went to the market…”"] },
+      { q: "What did Rahul forget to buy?", target: "Onions",
+        cues: ["Think about the second sentence.", "He forgot to buy ___.", "Let's re-read: “He forgot to buy onions.”"] },
+    ],
+  },
+  {
+    id: "r3", level: 2,
+    text: "Meera's phone rang while she was cooking. She turned off the stove before answering it.",
+    questions: [
+      { q: "What was Meera doing when the phone rang?", target: "Cooking",
+        cues: ["Think about the first sentence.", "She was ___ when it rang.", "Let's re-read: “…while she was cooking.”"] },
+      { q: "What did she do before answering the phone?", target: "Turned off the stove",
+        cues: ["Think about what happened right before she answered.", "She turned off the ___.", "Let's re-read: “She turned off the stove before answering it.”"] },
+    ],
+  },
+  {
+    id: "r4", level: 3,
+    text: "It had been raining all morning, so Meera decided to carry an umbrella. By the time she reached the bus stop, the rain had stopped.",
+    questions: [
+      { q: "Why did Meera carry an umbrella?", target: "Because it had been raining all morning",
+        cues: ["Think about the weather that morning.", "She carried it because it had been ___ all morning.", "Let's re-read: “It had been raining all morning, so Meera decided to carry an umbrella.”"] },
+      { q: "Was it still raining when she reached the bus stop?", target: "No, it had stopped",
+        cues: ["Think about the second sentence.", "By the bus stop, the rain had ___.", "Let's re-read: “…the rain had stopped.”"] },
+    ],
+  },
+  {
+    id: "r5", level: 3,
+    text: "Arjun's train was delayed by twenty minutes. He used the extra time to call his sister and tell her he'd be late.",
+    questions: [
+      { q: "How long was the train delayed?", target: "Twenty minutes",
+        cues: ["Think about the number mentioned.", "It was delayed by ___ minutes.", "Let's re-read: “…delayed by twenty minutes.”"] },
+      { q: "Why did Arjun call his sister?", target: "To tell her he would be late",
+        cues: ["Think about what he needed to tell her.", "He called to say he'd be ___.", "Let's re-read: “…tell her he'd be late.”"] },
+    ],
+  },
+  {
+    id: "r6", level: 4,
+    text: "The children had been playing in the park all afternoon. When the sky turned grey, their mother called them inside, just before the first drops of rain fell.",
+    questions: [
+      { q: "Why did their mother call them inside?", target: "Because the sky turned grey and rain was coming",
+        cues: ["Think about what changed in the sky.", "She called them in because the sky turned ___.", "Let's re-read: “When the sky turned grey, their mother called them inside.”"] },
+      { q: "What happened right after they went inside?", target: "It started to rain",
+        cues: ["Think about the very last part of the passage.", "Just after, the first drops of ___ fell.", "Let's re-read: “…just before the first drops of rain fell.”"] },
+    ],
+  },
+  {
+    id: "r7", level: 1,
+    text: "Sameer picked up his umbrella before leaving the house.",
+    questions: [
+      { q: "What did Sameer pick up before leaving?", target: "His umbrella",
+        cues: ["Think about what he took with him.", "He picked up his ___.", "Let's re-read: “…picked up his umbrella…”"] },
+    ],
+  },
+  {
+    id: "r8", level: 1,
+    text: "The kettle whistled loudly on the stove.",
+    questions: [
+      { q: "What was making the loud whistle?", target: "The kettle",
+        cues: ["Think about what was on the stove.", "The ___ whistled loudly.", "Let's re-read: “The kettle whistled loudly…”"] },
+    ],
+  },
+  {
+    id: "r9", level: 2,
+    text: "Nina packed her lunch box and left it on the kitchen table. She forgot to take it to work.",
+    questions: [
+      { q: "Where did Nina leave her lunch box?", target: "On the kitchen table",
+        cues: ["Think about where she put it down.", "She left it on the ___.", "Let's re-read: “…left it on the kitchen table.”"] },
+      { q: "Did she take it to work?", target: "No, she forgot it",
+        cues: ["Think about the second sentence.", "She forgot to ___ it.", "Let's re-read: “She forgot to take it to work.”"] },
+    ],
+  },
+  {
+    id: "r10", level: 2,
+    text: "The children lined up outside the classroom. Their teacher opened the door and let them in.",
+    questions: [
+      { q: "Where were the children waiting?", target: "Outside the classroom",
+        cues: ["Think about the first sentence.", "They lined up outside the ___.", "Let's re-read: “The children lined up outside the classroom.”"] },
+      { q: "Who opened the door?", target: "Their teacher",
+        cues: ["Think about who let them in.", "Their ___ opened the door.", "Let's re-read: “Their teacher opened the door…”"] },
+    ],
+  },
+  {
+    id: "r11", level: 3,
+    text: "Deepa had a headache all afternoon, so she went to bed early. By morning, she felt much better.",
+    questions: [
+      { q: "Why did Deepa go to bed early?", target: "Because she had a headache all afternoon",
+        cues: ["Think about how she was feeling that afternoon.", "She went to bed early because of her ___.", "Let's re-read: “Deepa had a headache all afternoon, so she went to bed early.”"] },
+      { q: "How did she feel by morning?", target: "Much better",
+        cues: ["Think about the last sentence.", "By morning she felt much ___.", "Let's re-read: “By morning, she felt much better.”"] },
+    ],
+  },
+  {
+    id: "r12", level: 3,
+    text: "The power went out just as Karan was cooking dinner. He finished cooking by candlelight.",
+    questions: [
+      { q: "What happened while Karan was cooking?", target: "The power went out",
+        cues: ["Think about the first sentence.", "The ___ went out.", "Let's re-read: “The power went out just as Karan was cooking dinner.”"] },
+      { q: "How did he finish cooking?", target: "By candlelight",
+        cues: ["Think about how he managed without power.", "He finished cooking by ___.", "Let's re-read: “He finished cooking by candlelight.”"] },
+    ],
+  },
+  {
+    id: "r13", level: 4,
+    text: "Leela had saved money for months to buy a new bicycle. When she finally went to the shop, her favourite colour was sold out, so she chose a different one.",
+    questions: [
+      { q: "Why couldn't Leela buy her favourite colour?", target: "Because it was sold out",
+        cues: ["Think about what had happened to that colour.", "Her favourite colour was ___.", "Let's re-read: “…her favourite colour was sold out…”"] },
+      { q: "What did she do instead?", target: "She chose a different colour",
+        cues: ["Think about the end of the sentence.", "So she chose a ___ one.", "Let's re-read: “…so she chose a different one.”"] },
+    ],
+  },
+  {
+    id: "r14", level: 4,
+    text: "Vikram noticed dark clouds gathering as he set off for his walk. He turned back home before it started pouring.",
+    questions: [
+      { q: "Why did Vikram turn back home?", target: "Because he noticed dark clouds and rain was coming",
+        cues: ["Think about what he saw in the sky.", "He turned back because of the dark ___.", "Let's re-read: “Vikram noticed dark clouds gathering…”"] },
+      { q: "Did it rain before or after he got home?", target: "After — he got back before it started pouring",
+        cues: ["Think about the order the two things happened in.", "He got home ___ it started pouring.", "Let's re-read: “He turned back home before it started pouring.”"] },
+    ],
+  },
+  {
+    id: "r15", level: 5,
+    text: "Ananya had been saving for a trip to the mountains for over a year. Two weeks before she was due to leave, her manager asked her to lead an urgent project at work. She decided to postpone the trip until the project was finished.",
+    questions: [
+      { q: "Why did Ananya postpone her trip?", target: "Because her manager asked her to lead an urgent project",
+        cues: ["Think about what came up two weeks before she was due to leave.", "She postponed it because of an urgent ___ at work.", "Let's re-read: “…her manager asked her to lead an urgent project at work.”"] },
+      { q: "How long had she been saving for the trip?", target: "Over a year",
+        cues: ["Think about the very first sentence.", "She had been saving for over a ___.", "Let's re-read: “Ananya had been saving for a trip to the mountains for over a year.”"] },
+    ],
+  },
+  {
+    id: "r16", level: 5,
+    text: "The bridge near Farhan's house had been closed for repairs since Monday. On Thursday, he had to take a much longer route to reach the market, which made him late for an appointment.",
+    questions: [
+      { q: "Why did Farhan take a longer route on Thursday?", target: "Because the bridge was closed for repairs",
+        cues: ["Think about what had happened to the bridge.", "He took a longer route because the bridge was ___.", "Let's re-read: “The bridge near Farhan's house had been closed for repairs since Monday.”"] },
+      { q: "What was the effect of taking the longer route?", target: "He was late for an appointment",
+        cues: ["Think about the end of the passage.", "It made him ___ for an appointment.", "Let's re-read: “…which made him late for an appointment.”"] },
+    ],
+  },
+  {
+    id: "r17", level: 1,
+    text: "Farida turned off the lights before going to sleep.",
+    questions: [
+      { q: "What did Farida turn off?", target: "The lights",
+        cues: ["Think about what she switched off.", "She turned off the ___.", "Let's re-read: “Farida turned off the lights…”"] },
+    ],
+  },
+  {
+    id: "r18", level: 2,
+    text: "Amit filled the water bottles and put them in the fridge. He left one on the counter by mistake.",
+    questions: [
+      { q: "Where did Amit put most of the water bottles?", target: "In the fridge",
+        cues: ["Think about the first sentence.", "He put them in the ___.", "Let's re-read: “…put them in the fridge.”"] },
+      { q: "Where was the one he left by mistake?", target: "On the counter",
+        cues: ["Think about the second sentence.", "He left one on the ___.", "Let's re-read: “He left one on the counter by mistake.”"] },
+    ],
+  },
+  {
+    id: "r19", level: 3,
+    text: "Sunita's alarm didn't go off, so she woke up late. She skipped breakfast to reach the office on time.",
+    questions: [
+      { q: "Why did Sunita wake up late?", target: "Because her alarm didn't go off",
+        cues: ["Think about what didn't happen that morning.", "Her ___ didn't go off.", "Let's re-read: “Sunita's alarm didn't go off, so she woke up late.”"] },
+      { q: "What did she skip because of this?", target: "Breakfast",
+        cues: ["Think about the second sentence.", "She skipped ___.", "Let's re-read: “She skipped breakfast to reach the office on time.”"] },
+    ],
+  },
+  {
+    id: "r20", level: 3,
+    text: "The library closed early for a holiday. Rohit had to return his books the next day instead.",
+    questions: [
+      { q: "Why did the library close early?", target: "For a holiday",
+        cues: ["Think about the first sentence.", "It closed early for a ___.", "Let's re-read: “The library closed early for a holiday.”"] },
+      { q: "When did Rohit return his books?", target: "The next day",
+        cues: ["Think about when he ended up going instead.", "He returned them the ___ day.", "Let's re-read: “Rohit had to return his books the next day instead.”"] },
+    ],
+  },
+  {
+    id: "r21", level: 4,
+    text: "Priya's plants were wilting because she had been away for a week. She watered them as soon as she got home, and by the next day they looked fresh again.",
+    questions: [
+      { q: "Why were Priya's plants wilting?", target: "Because she had been away for a week and hadn't watered them",
+        cues: ["Think about why nobody had watered them.", "She had been ___ for a week.", "Let's re-read: “…wilting because she had been away for a week.”"] },
+      { q: "How did they look the next day?", target: "Fresh again",
+        cues: ["Think about the end of the passage.", "By the next day they looked ___ again.", "Let's re-read: “…by the next day they looked fresh again.”"] },
+    ],
+  },
+  {
+    id: "r22", level: 4,
+    text: "Yusuf's flight was moved to an earlier time. He had to leave for the airport before finishing his lunch.",
+    questions: [
+      { q: "Why did Yusuf leave before finishing lunch?", target: "Because his flight was moved to an earlier time",
+        cues: ["Think about what changed about his flight.", "His flight was moved ___.", "Let's re-read: “Yusuf's flight was moved to an earlier time.”"] },
+      { q: "What was he doing when he had to leave?", target: "Having lunch",
+        cues: ["Think about what he hadn't finished.", "He hadn't finished his ___.", "Let's re-read: “…before finishing his lunch.”"] },
+    ],
+  },
+  {
+    id: "r23", level: 5,
+    text: "Kavya had promised to help her neighbour move furniture on Saturday. On Friday night, she came down with a fever, so she called to apologise and reschedule for the following week.",
+    questions: [
+      { q: "Why couldn't Kavya help her neighbour on Saturday?", target: "Because she came down with a fever on Friday night",
+        cues: ["Think about what happened the night before.", "She came down with a ___.", "Let's re-read: “On Friday night, she came down with a fever…”"] },
+      { q: "What did she do instead of helping?", target: "She called to apologise and reschedule",
+        cues: ["Think about what she did about the promise.", "She called to ___ and reschedule.", "Let's re-read: “…she called to apologise and reschedule for the following week.”"] },
+    ],
+  },
+  {
+    id: "r24", level: 6,
+    text: "The office had been unusually quiet all week because most people were away for a festival. Ravi used the quiet time to finish a report that had been delayed for months. When his manager returned on Monday, she was surprised to see it already on her desk.",
+    questions: [
+      { q: "Why was the office quiet all week?", target: "Because most people were away for a festival",
+        cues: ["Think about why fewer people were around.", "Most people were away for a ___.", "Let's re-read: “…because most people were away for a festival.”"] },
+      { q: "Why was the manager surprised?", target: "Because the delayed report was already finished and on her desk when she got back",
+        cues: ["Think about what she found waiting for her.", "She was surprised to see the report already ___.", "Let's re-read: “…she was surprised to see it already on her desk.”"] },
+    ],
+  },
+];

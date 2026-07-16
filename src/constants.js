@@ -12,6 +12,9 @@ export const C = {
   clayDeep: "#9C5F30",
   clayTint: "#F4E8D9",
   stone: "#8A9389",
+  indigo: "#4F6D8C",
+  indigoDeep: "#37506A",
+  indigoTint: "#E4EAEF",
 };
 
 export const RATINGS = [
@@ -44,3 +47,25 @@ export const AREAS = [
 
 export const DECK_RUNGS = { name: "Name what you see", two_words: "Two words together", fill: "Fill in the blank", describe: "Describe it — 2–3 sentences" };
 export const DECK_CHEER = ["You're doing brilliantly — keep going.", "That was a full sentence. Nice work.", "Great describing — you built that yourself.", "Take your time. You've got this."];
+
+/* ---- reading & comprehension ----
+   Same 5-tier structure/scoring as RATINGS, so support levels stay comparable
+   app-wide — only the cue-3 wording changes (a re-read stands in for a sound cue). */
+export const READING_RATINGS = [
+  { key: "independent", label: "On their own",   note: "Answered without any help",     score: 0, color: C.sage,     tint: C.sageTint },
+  { key: "cue1",        label: "After a starter", note: "Needed a sentence starter",    score: 1, color: "#7A9A5B", tint: "#EAF0E0" },
+  { key: "cue2",        label: "After a fill-in", note: "Needed a fill-in-the-blank",   score: 2, color: C.clay,    tint: C.clayTint },
+  { key: "cue3",        label: "After a re-read", note: "Needed to re-read the line",   score: 3, color: C.clayDeep, tint: "#EFDcC8" },
+  { key: "notyet",      label: "Not yet",         note: "No answer, or incorrect",       score: 4, color: C.stone,   tint: "#E7EAE6" },
+];
+
+export const RSVP_CHUNK_MODES = [
+  { key: "word", label: "1 word" },
+  { key: "phrase", label: "2–3 words" },
+  { key: "sentence", label: "Full sentence" },
+];
+
+export const RSVP_DEFAULT_WPM = 200;
+export const RSVP_MIN_WPM = 80;
+export const RSVP_MAX_WPM = 400;
+export const RSVP_STEP_WPM = 20;

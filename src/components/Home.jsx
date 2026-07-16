@@ -13,7 +13,7 @@ function TileBtn({ onClick, title, sub, foot }) {
   );
 }
 
-export function Home({ bank, physioBank, sessions, domain, setDomain, go }) {
+export function Home({ bank, physioBank, readingBank, sessions, domain, setDomain, go }) {
   const approvedSpeech = bank.filter((b) => b.approved).length;
 
   return (
@@ -26,7 +26,7 @@ export function Home({ bank, physioBank, sessions, domain, setDomain, go }) {
         Choose what to work on today.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12 }}>
         <button className="tw-focus tw-lift" onClick={() => { setDomain("speech"); go("setup"); }}
           style={{ textAlign: "left", background: C.sage, color: "#fff", border: "none",
             borderRadius: 18, padding: "20px 18px", boxShadow: `0 3px 0 ${C.sageDeep}`,
@@ -47,6 +47,17 @@ export function Home({ bank, physioBank, sessions, domain, setDomain, go }) {
             <span style={{ fontSize: 13, opacity: .85, display: "block", marginTop: 4 }}>Live session, facilitator-run</span>
           </span>
           <span style={{ fontSize: 12.5, opacity: .7, marginTop: 12 }}>{physioBank.length} drills seeded</span>
+        </button>
+
+        <button className="tw-focus tw-lift" onClick={() => { setDomain("reading"); go("setup"); }}
+          style={{ textAlign: "left", background: C.indigo, color: "#fff", border: "none",
+            borderRadius: 18, padding: "20px 18px", boxShadow: `0 3px 0 ${C.indigoDeep}`,
+            display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 120 }}>
+          <span>
+            <span style={{ fontSize: 20, fontWeight: 700, display: "block" }}>Reading</span>
+            <span style={{ fontSize: 13, opacity: .85, display: "block", marginTop: 4 }}>Passages + comprehension</span>
+          </span>
+          <span style={{ fontSize: 12.5, opacity: .7, marginTop: 12 }}>{readingBank.length} passages seeded</span>
         </button>
       </div>
 

@@ -4,8 +4,53 @@
  * written to be read by a human (the coordinator, later you), not parsed by a script.
  */
 import { ratingByKey, supportWord, isDeck, isScene } from "./utils";
+import { READING_RATINGS } from "./constants";
 
 const understandWord = { yes: "yes", partly: "partly", no: "no" };
+
+export function buildReadingReport(session, patientName = "Akki") {
+  const { passages, results, notes } = session;
+  const dt = new Date(session.at || Date.now());
+  const dateStr = dt.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const timeStr = dt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+  const total = results.length;
+  const counts = {};
+  results.forEach((r) => { counts[r.rating] = (counts[r.rating] || 0) + 1; });
+  const avg = total ? results.reduce((s, r) => s + ratingByKey(r.rating, READING_RATINGS).score, 0) / total : 0;
+  const independent = counts.independent || 0;
+
+  const lines = [];
+  lines.push(`Turnwell — reading & comprehension session with ${patientName}`);
+  lines.push(`${dateStr} at ${timeStr}`);
+  lines.push("");
+  lines.push(`${passages.length} passage${passages.length > 1 ? "s" : ""} read, ${total} question${total !== 1 ? "s" : ""} asked.`);
+  lines.push(`Answered independently: ${independent}/${total}.`);
+  lines.push(`Typical support needed: ${supportWord(avg)}.`);
+  lines.push("");
+
+  lines.push("Breakdown:");
+  READING_RATINGS.forEach((r) => { lines.push(`  ${r.label}: ${counts[r.key] || 0}`); });
+  lines.push("");
+
+  lines.push(`Passages and questions:`);
+  lines.push("");
+  let qNum = 1;
+  passages.forEach((p) => {
+    lines.push(`Passage${p.level ? ` (level ${p.level})` : ""}: "${p.text}"`);
+    results.filter((r) => r.passageId === p.id).forEach((r) => {
+      const rating = ratingByKey(r.rating, READING_RATINGS);
+      lines.push(`  ${qNum}. ${r.question}`);
+      lines.push(`     ${rating.label}${r.cueUsed ? ` (${r.cueUsed} cue${r.cueUsed > 1 ? "s" : ""} used)` : ""}`);
+      qNum += 1;
+    });
+    lines.push("");
+  });
+
+  lines.push(`Notes: ${notes && notes.trim() ? notes.trim() : "—"}`);
+
+  return lines.join("\n");
+}
 
 export function buildSpeechReport(rec, ratings, patientName = "Akki") {
   const dt = new Date(rec.at || Date.now());
