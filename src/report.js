@@ -95,8 +95,18 @@ export function buildSpeechReport(rec, ratings, patientName = "Akki") {
   return lines.join("\n");
 }
 
+const involveWord = {
+  0: "0 passive", 1: "1 flicker", 2: "2 with help", 3: "3 carries on", 4: "4 on his own",
+};
+const fadeWord = {
+  nothing: "nothing remained", flicker: "a flicker held", brief: "held briefly", held: "held it",
+};
+const ankleWord = {
+  neutral: "reaches neutral", tight: "tight, short of neutral", lost: "not close to neutral",
+};
+
 export function buildPhysioReport(session, patientName = "Akki") {
-  const { items, results, star, before, after, closing } = session;
+  const { items, results, star, before, after, closing, priming } = session;
   const dt = new Date(session.at || Date.now());
   const dateStr = dt.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const timeStr = dt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
@@ -114,6 +124,14 @@ export function buildPhysioReport(session, patientName = "Akki") {
     } else {
       lines.push(`After the session: tiredness ${after.tired}/10, mood ${after.mood}/10.`);
     }
+    lines.push("");
+  }
+
+  if (priming) {
+    lines.push(`Priming: ankle ${ankleWord[priming.ankle] || priming.ankle}.` +
+      (priming.alertness ? ` Alertness ${priming.alertness}/10.` : "") +
+      (priming.splint ? ` Splint worn ${priming.splint.hours}h, skin ${priming.splint.skinClear === false ? "NOT clear — needs refitting" : "clear"}.` : ""));
+    if (priming.ankle === "lost") lines.push(`   ** Ankle range flagged — contracture here blocks standing. **`);
     lines.push("");
   }
 
@@ -135,8 +153,10 @@ export function buildPhysioReport(session, patientName = "Akki") {
     lines.push(`${i + 1}. ${r.title}`);
     lines.push(`   Reps: ${r.actReps} actual (he estimated ${r.estReps})`);
     lines.push(`   Difficulty: ${r.actDiff}/10 actual, predicted ${r.estDiff}/10 — ${tickWord} (${r.tick})`);
+    lines.push(`   INVOLVEMENT: ${involveWord[r.involvement] ?? r.involvement}`);
+    if (r.standing) lines.push(`   Standing: ${r.standing.minutes} min — ${r.standing.quality === "held" ? "quality held" : r.standing.quality === "faded" ? "faded near the end" : "degraded, stopped early"}`);
     lines.push(`   Understood what it's for: ${understandWord[r.understood] || r.understood}`);
-    lines.push(`   Dual-task: ${r.dualTask ? "yes" : "no"}`);
+    lines.push(`   Dual-task: ${r.dualTask ? "yes" : "no"}${r.quickStretched ? " · quick-stretched first" : ""}`);
     lines.push("");
   });
 
@@ -150,6 +170,28 @@ export function buildPhysioReport(session, patientName = "Akki") {
     `this tracks his metacognition, not pass/fail. He explained what the exercise was for correctly on ${understandCounts.yes}, ` +
     `partly on ${understandCounts.partly}, and not at all on ${understandCounts.no}.`
   );
+
+  const scored = results.filter((r) => typeof r.involvement === "number");
+  if (scored.length) {
+    const best = Math.max(...scored.map((r) => r.involvement));
+    const bestEx = scored.filter((r) => r.involvement === best).map((r) => r.title).join(", ");
+    lines.push("");
+    lines.push(`Best involvement today: ${involveWord[best]} — on ${bestEx}.`);
+    if (best >= 3) lines.push(`   A 3 appeared. If it repeats across sessions, that is the gate to ramp standing time or reduce support.`);
+    else lines.push(`   No 3 yet. Hold current standing time and support level.`);
+  }
+
+  const standingTotal = results.reduce((t, r) => t + (r.standing ? r.standing.minutes : 0), 0);
+  if (standingTotal > 0) {
+    lines.push("");
+    lines.push(`Standing total: ${standingTotal} min (ceiling 20).`);
+  }
+
+  if (closing && closing.fadeProbe) {
+    lines.push("");
+    lines.push(`Fade probe: ${fadeWord[closing.fadeProbe.outcome] || closing.fadeProbe.outcome}` +
+      (closing.fadeProbe.detail ? ` — ${closing.fadeProbe.detail}` : "") + ".");
+  }
 
   if (closing && closing.favouriteTitle) {
     lines.push("");
