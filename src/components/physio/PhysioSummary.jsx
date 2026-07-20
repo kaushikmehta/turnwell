@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { C, INVOLVEMENT, GATE_RULE } from "../../constants";
+import { C, INVOLVEMENT, GATE_RULE, unitLabel } from "../../constants";
 import { buildPhysioReport } from "../../report";
 import { SectionLabel } from "../shared";
 
@@ -70,7 +70,7 @@ export function PhysioSummary({ session, onDone }) {
               <div>
                 <div style={{ fontSize: 14.5, fontWeight: 700, color: C.ink }}>{r.title}</div>
                 <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 2 }}>
-                  involvement {r.involvement} · reps {r.actReps}({r.estReps}) · diff {r.actDiff}({r.estDiff}){r.standing ? ` · ${r.standing.minutes} min standing` : ""}{r.dualTask ? " · dual-task" : ""}
+                  involvement {r.involvement} · {unitLabel(r.unit)} {r.actReps}({r.estReps}) · diff {r.actDiff}({r.estDiff}){r.standing ? ` · ${r.standing.minutes} min standing` : ""}{r.dualTask ? " · dual-task" : ""}
                 </div>
               </div>
               <span style={{ fontSize: 20 }}>{r.tick === "green" ? "🟢" : "🟡"}</span>

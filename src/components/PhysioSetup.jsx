@@ -15,6 +15,7 @@ export function PhysioSetup({ physioBank, start, back }) {
   const isSelected = (id) => selected.some((s) => s.id === id);
 
   const toggleSeeded = (ex) => {
+    if (ex.dormant) return;
     if (isSelected(ex.id)) {
       setSelected(selected.filter((s) => s.id !== ex.id));
     } else if (selected.length < 4) {
@@ -22,6 +23,10 @@ export function PhysioSetup({ physioBank, start, back }) {
       setDualTask((d) => ({ ...d, [ex.id]: ex.defaultDualTask }));
     }
   };
+
+  const activeBank = physioBank.filter((ex) => !ex.dormant && !ex.probeOnly);
+  const probeBank = physioBank.filter((ex) => !ex.dormant && ex.probeOnly);
+  const dormantBank = physioBank.filter((ex) => ex.dormant);
 
   const addCustom = () => {
     if (!customTitle.trim() || selected.length >= 4) return;
@@ -72,7 +77,7 @@ export function PhysioSetup({ physioBank, start, back }) {
 
       <SectionLabel>Exercises</SectionLabel>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-        {physioBank.map((ex) => {
+        {activeBank.map((ex) => {
           const on = isSelected(ex.id);
           const disabled = !on && count >= 4;
           return (
@@ -117,6 +122,54 @@ export function PhysioSetup({ physioBank, start, back }) {
           </div>
         ))}
       </div>
+
+      {probeBank.length > 0 && (
+        <>
+          <SectionLabel>Weekly probes — measurement, not training</SectionLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+            {probeBank.map((ex) => {
+              const on = isSelected(ex.id);
+              const disabled = !on && count >= 4;
+              return (
+                <div key={ex.id} style={{ background: on ? C.clayTint : C.surface, border: `1.5px solid ${on ? C.clay : C.line}`,
+                  borderRadius: 14, padding: "13px 15px", opacity: disabled ? .5 : 1 }}>
+                  <label className="tw-focus" style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: disabled ? "default" : "pointer" }}>
+                    <input type="checkbox" checked={on} disabled={disabled} onChange={() => toggleSeeded(ex)}
+                      style={{ width: 18, height: 18, accentColor: C.clay, marginTop: 2, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>{ex.title}</div>
+                      <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>
+                        {ex.instructions.length > 100 ? ex.instructions.slice(0, 100) + "…" : ex.instructions}
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {dormantBank.length > 0 && (
+        <>
+          <SectionLabel>Not yet — unlocks later</SectionLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+            {dormantBank.map((ex) => (
+              <div key={ex.id} style={{ background: C.paper, border: `1.5px dashed ${C.line}`, borderRadius: 14, padding: "13px 15px", opacity: .55 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <input type="checkbox" checked={false} disabled
+                    style={{ width: 18, height: 18, marginTop: 2, flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: C.inkSoft }}>{ex.title}</div>
+                    <div style={{ fontSize: 12.5, color: C.stone, marginTop: 3, lineHeight: 1.4 }}>{ex.instructions}</div>
+                    <div style={{ fontSize: 11.5, color: C.clayDeep, fontWeight: 600, marginTop: 6 }}>Unlocks at {ex.unlocksAt}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {count < 4 && (
         customOpen ? (

@@ -124,3 +124,17 @@ export const STANDING_QUALITY = [
   { key: "faded",    label: "Faded near the end" },
   { key: "degraded", label: "Degraded — stopped early" },
 ];
+
+/* What "count" means for a given exercise. Reps is meaningless for TRAM
+   standing (minutes) or a perturbation drill (catches) — read the label
+   off the exercise instead of hardcoding "reps" everywhere. */
+export const UNIT_LABELS = {
+  reps: "reps",
+  minutes: "minutes",
+  shifts: "shifts",
+  reaches: "reaches",
+  catches: "catches",
+  attempts: "attempts",
+  task: "times",
+};
+export const unitLabel = (unit) => UNIT_LABELS[unit] || "reps";

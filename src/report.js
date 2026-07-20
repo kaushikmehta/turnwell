@@ -4,7 +4,7 @@
  * written to be read by a human (the coordinator, later you), not parsed by a script.
  */
 import { ratingByKey, supportWord, isDeck, isScene } from "./utils";
-import { READING_RATINGS } from "./constants";
+import { READING_RATINGS, unitLabel } from "./constants";
 
 const understandWord = { yes: "yes", partly: "partly", no: "no" };
 
@@ -150,8 +150,9 @@ export function buildPhysioReport(session, patientName = "Akki") {
   lines.push("");
   results.forEach((r, i) => {
     const tickWord = r.tick === "green" ? "matched — he predicted the difficulty correctly" : "didn't match — his prediction was off";
+    const unit = unitLabel(r.unit);
     lines.push(`${i + 1}. ${r.title}`);
-    lines.push(`   Reps: ${r.actReps} actual (he estimated ${r.estReps})`);
+    lines.push(`   ${unit.charAt(0).toUpperCase() + unit.slice(1)}: ${r.actReps} actual (he estimated ${r.estReps})`);
     lines.push(`   Difficulty: ${r.actDiff}/10 actual, predicted ${r.estDiff}/10 — ${tickWord} (${r.tick})`);
     lines.push(`   INVOLVEMENT: ${involveWord[r.involvement] ?? r.involvement}`);
     if (r.standing) lines.push(`   Standing: ${r.standing.minutes} min — ${r.standing.quality === "held" ? "quality held" : r.standing.quality === "faded" ? "faded near the end" : "degraded, stopped early"}`);

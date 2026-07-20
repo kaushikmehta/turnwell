@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { C, DUAL_TASK_SUGGESTIONS, INVOLVEMENT, QUICK_STRETCH_NOTE, STANDING_QUALITY } from "../../constants";
+import { C, DUAL_TASK_SUGGESTIONS, INVOLVEMENT, QUICK_STRETCH_NOTE, STANDING_QUALITY, unitLabel } from "../../constants";
 import { SectionLabel } from "../shared";
 import { Metronome } from "./Metronome";
 
@@ -57,7 +57,7 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
     const est = estimate;
     const tick = Number(actDiff) === est.estDiff ? "green" : "yellow";
     onFinish({
-      id: item.id, title: item.title,
+      id: item.id, title: item.title, unit: item.unit,
       estReps: est.estReps, estDiff: est.estDiff,
       actReps: Number(actReps), actDiff: Number(actDiff),
       tick, understood, dualTask: !!item.dualTask,
@@ -173,11 +173,11 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
 
           <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
             <p style={{ fontSize: 14.5, color: C.ink, margin: "0 0 12px", lineHeight: 1.4 }}>
-              Ask him to say again what this exercise does and how it helps — then ask how many reps he actually did and how hard it was.
+              Ask him to say again what this exercise does and how it helps — then ask how many {unitLabel(item.unit)} he actually did and how hard it was.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, color: C.inkSoft, marginBottom: 5 }}>Actual reps</div>
+                <div style={{ fontSize: 12, color: C.inkSoft, marginBottom: 5 }}>Actual {unitLabel(item.unit)}</div>
                 <input type="number" min={0} value={actReps} onChange={(e) => setActReps(e.target.value)}
                   className="tw-focus" style={{ width: "100%", background: "#fff", border: `1px solid ${C.line}`, borderRadius: 10, padding: "10px 12px", fontSize: 15 }} />
               </div>

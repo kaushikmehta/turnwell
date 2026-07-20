@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { C } from "../../constants";
+import { C, unitLabel } from "../../constants";
 import { SectionLabel } from "../shared";
 
 export function Estimates({ items, onNext }) {
@@ -19,7 +19,8 @@ export function Estimates({ items, onNext }) {
       <SectionLabel>Estimates</SectionLabel>
       <h2 className="tw-serif" style={{ fontSize: 26, margin: "0 0 8px" }}>His own estimates</h2>
       <p style={{ color: C.inkSoft, margin: "0 0 20px", fontSize: 14.5, lineHeight: 1.4 }}>
-        Ask him, for each exercise: how many reps can he do, and how hard does he think it'll be (1–10)?
+        Ask him, for each exercise: how many he thinks he can do (reps, minutes, catches —
+        whatever that exercise counts), and how hard does he think it'll be (1–10)?
         Don't accept a hedge — draw out a real number. Push back on a 5: make him commit to a direction.
       </p>
 
@@ -29,7 +30,7 @@ export function Estimates({ items, onNext }) {
             <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 10 }}>{it.title}</div>
             <div style={{ display: "flex", gap: 10 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, color: C.inkSoft, marginBottom: 5 }}>Estimated reps</div>
+                <div style={{ fontSize: 12, color: C.inkSoft, marginBottom: 5 }}>Estimated {unitLabel(it.unit)}</div>
                 <input type="number" min={0} value={values[it.id].estReps} onChange={(e) => set(it.id, "estReps", e.target.value)}
                   className="tw-focus" style={{ width: "100%", background: "#fff", border: `1px solid ${C.line}`, borderRadius: 10, padding: "10px 12px", fontSize: 15, color: C.ink }} />
               </div>
