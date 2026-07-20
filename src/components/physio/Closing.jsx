@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { C } from "../../constants";
+import { C, FADE_PROBE_NOTE, FADE_OUTCOMES } from "../../constants";
 import { SectionLabel, inputStyle } from "../shared";
 
 function RatingInput({ label, value, onChange }) {
@@ -18,6 +18,8 @@ export function Closing({ items, star, onNext }) {
   const [favouriteWhy, setFavouriteWhy] = useState("");
   const [after, setAfter] = useState({ tired: "", mood: "", satisfaction: "" });
   const [notes, setNotes] = useState("");
+  const [fade, setFade] = useState(null);
+  const [fadeWhat, setFadeWhat] = useState("");
 
   const canContinue = !!starRecalledId;
 
@@ -31,6 +33,7 @@ export function Closing({ items, star, onNext }) {
       starRecalledId: recalled.id, starRecalledTitle: recalled.title,
       favouriteId: fav ? fav.id : null, favouriteTitle: fav ? fav.title : null, favouriteWhy: favouriteWhy.trim(),
       after: a, notes: notes.trim(),
+      fadeProbe: fade ? { outcome: fade, detail: fadeWhat.trim() } : null,
     });
   };
 
@@ -91,8 +94,24 @@ export function Closing({ items, star, onNext }) {
         </div>
       </div>
 
+      <div style={{ background: C.sageTint, border: `1px solid ${C.sage}44`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.sageDeep, marginBottom: 5 }}>5. Fade probe</div>
+        <p style={{ fontSize: 13, color: C.ink, margin: "0 0 11px", lineHeight: 1.42 }}>{FADE_PROBE_NOTE}</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 10 }}>
+          {FADE_OUTCOMES.map((o) => (
+            <button key={o.key} className="tw-focus" onClick={() => setFade(o.key)}
+              style={{ border: `1.5px solid ${fade === o.key ? C.sageDeep : C.line}`,
+                background: fade === o.key ? "#fff" : C.surface, color: fade === o.key ? C.sageDeep : C.inkSoft,
+                borderRadius: 999, padding: "9px 14px", fontSize: 13, fontWeight: 700 }}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+        <input value={fadeWhat} onChange={(e) => setFadeWhat(e.target.value)} style={inputStyle} placeholder="Which activity, and what remained? (optional)" />
+      </div>
+
       <div style={{ marginBottom: 22 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, marginBottom: 8 }}>5. Notes</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, marginBottom: 8 }}>6. Notes</div>
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} style={inputStyle} placeholder="Anything worth remembering…" />
       </div>
 

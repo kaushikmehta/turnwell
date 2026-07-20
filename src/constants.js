@@ -69,3 +69,58 @@ export const RSVP_DEFAULT_WPM = 200;
 export const RSVP_MIN_WPM = 80;
 export const RSVP_MAX_WPM = 400;
 export const RSVP_STEP_WPM = 20;
+
+/* ================================================================
+   MOTOR / NEURO LAYER
+   Added to carry the ACoA initiation-and-persistence approach:
+   involvement scoring, priming, quick-stretch, rhythm, standing dose.
+   ================================================================ */
+
+/* The involvement scale. The core measure — everything gates on it.
+   Score the BEST response of the exercise, not the average. */
+export const INVOLVEMENT = [
+  { score: 0, label: "Passive",        note: "You moved a passive limb. No contribution.",              color: C.stone,    tint: "#E7EAE6" },
+  { score: 1, label: "Flicker",        note: "Muscle activity under your hand, no movement produced.",  color: C.clayDeep, tint: "#EFDCC8" },
+  { score: 2, label: "With help",      note: "Contributes while facilitated — dies when you stop.",     color: C.clay,     tint: C.clayTint },
+  { score: 3, label: "Carries on",     note: "Continues briefly after you reduce, or starts before your cue.", color: "#7A9A5B", tint: "#EAF0E0" },
+  { score: 4, label: "On his own",     note: "Initiates and sustains without facilitation.",            color: C.sage,     tint: C.sageTint },
+];
+
+/* Gate rule shown in the app so nobody progresses on a single good day. */
+export const GATE_RULE = "Progress standing time or reduce support only after a 3 appears and repeats across sessions. One good moment is noise.";
+
+/* Block A — priming. Runs before the cognitive opening. */
+export const PRIMING_STEPS = [
+  { key: "rom",     title: "Full-body ROM",        note: "Slow and sustained — this is tissue work. Ankle dorsiflexion to neutral is the priority." },
+  { key: "loaded",  title: "Sitting, feet loaded", note: "Feet flat and firmly on the floor, not dangling. Pressure through the soles is the trigger." },
+  { key: "arm",     title: "Right-arm resisted",   note: "3–4 min diagonal push/pull to a rhythm. Wakes the whole motor system (irradiation)." },
+  { key: "alert",   title: "Arousal check",        note: "Is he actually alert? A session on a drowsy brain teaches nothing." },
+];
+
+/* Quick stretch — the neural one. Distinct from the ROM above.
+   Effect decays in seconds, so it happens at the point of use. */
+export const QUICK_STRETCH_NOTE =
+  "Brisk 5–10 second stretch into the muscle you're about to ask for. This is neural priming, not tissue work — it raises motor-neuron excitability so a weak signal can reach threshold, and the effect fades within about a minute. It has to happen now, not at the start of the session.";
+
+/* Rhythm — Rule 2. Substitutes for the missing internal timekeeper. */
+export const METRONOME_DEFAULT_BPM = 60;
+export const METRONOME_MIN_BPM = 30;
+export const METRONOME_MAX_BPM = 120;
+
+/* Fade probe — once per session, at closing. */
+export const FADE_PROBE_NOTE =
+  "Once per session, on one activity, reduce your facilitation and see what remains. Probing is not progressing — you probe daily to collect data, and only actually reduce support when involvement says he's ready.";
+
+export const FADE_OUTCOMES = [
+  { key: "nothing",  label: "Nothing remained" },
+  { key: "flicker",  label: "A flicker held" },
+  { key: "brief",    label: "Held briefly" },
+  { key: "held",     label: "Held it" },
+];
+
+/* Standing quality — the limiter now that orthostatic risk has resolved. */
+export const STANDING_QUALITY = [
+  { key: "held",     label: "Quality held" },
+  { key: "faded",    label: "Faded near the end" },
+  { key: "degraded", label: "Degraded — stopped early" },
+];

@@ -20,7 +20,7 @@ export function Estimates({ items, onNext }) {
       <h2 className="tw-serif" style={{ fontSize: 26, margin: "0 0 8px" }}>His own estimates</h2>
       <p style={{ color: C.inkSoft, margin: "0 0 20px", fontSize: 14.5, lineHeight: 1.4 }}>
         Ask him, for each exercise: how many reps can he do, and how hard does he think it'll be (1–10)?
-        Don't accept a hedge — draw out a real number. A "5" is a fine answer.
+        Don't accept a hedge — draw out a real number. Push back on a 5: make him commit to a direction.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 22 }}>

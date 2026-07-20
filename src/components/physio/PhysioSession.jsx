@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Priming } from "./Priming";
 import { Opening } from "./Opening";
 import { Estimates } from "./Estimates";
 import { ExerciseLoop } from "./ExerciseLoop";
@@ -6,7 +7,8 @@ import { Closing } from "./Closing";
 import { PhysioSummary } from "./PhysioSummary";
 
 export function PhysioSession({ config, home }) {
-  const [phase, setPhase] = useState("opening"); // opening | estimates | loop | closing | summary
+  const [phase, setPhase] = useState("priming"); // priming | opening | estimates | loop | closing | summary
+  const [priming, setPriming] = useState(null);
   const [star, setStar] = useState(null);
   const [before, setBefore] = useState(null);
   const [estimates, setEstimates] = useState(null);
@@ -44,13 +46,17 @@ export function PhysioSession({ config, home }) {
   const endEarly = () => setPhase("closing");
 
   const session = {
-    at: Date.now(), items, firstSession: config.firstSession,
+    at: Date.now(), items, firstSession: config.firstSession, priming,
     star, before, after: closingData ? closingData.after : null,
     results, closing: closingData,
   };
 
   return (
     <div>
+      {phase === "priming" && (
+        <Priming onNext={(p) => { setPriming(p); setPhase("opening"); }} />
+      )}
+
       {phase === "opening" && (
         <Opening items={items} firstSession={config.firstSession}
           onNext={({ star: s, before: b }) => { setStar(s); setBefore(b); setPhase("estimates"); }} />

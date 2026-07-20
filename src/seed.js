@@ -275,6 +275,7 @@ export const seedPhysioExercises = () => [
       "Push the roll down and lift your heel",
     ],
     watchFor: "WORKING = quadriceps contraction / heel lift he starts, even a flicker. COMPENSATION = pushing the whole leg down from the hip without the knee straightening.",
+    quickStretch: "quads, just above the knee", isStanding: false,
     mediaUrl: "", defaultDualTask: false,
   },
   {
@@ -286,6 +287,7 @@ export const seedPhysioExercises = () => [
       "Point your toes up towards the ceiling",
     ],
     watchFor: "WORKING = toes/foot lifting from the ankle, even a small flicker. COMPENSATION = the whole leg lifting from the hip, or the knee bending to substitute.",
+    quickStretch: "calf — brisk lengthen into dorsiflexion", isStanding: false,
     mediaUrl: "", defaultDualTask: false,
   },
   {
@@ -297,6 +299,7 @@ export const seedPhysioExercises = () => [
       "Shift over to your left, and back to the middle",
     ],
     watchFor: "WORKING = a controlled weight transfer through the pelvis with the trunk staying upright. COMPENSATION = leaning/collapsing sideways from the shoulders, or propping on the arms.",
+    quickStretch: "hip abductors on the side you shift toward", isStanding: false,
     mediaUrl: "", defaultDualTask: true,
   },
   {
@@ -308,6 +311,7 @@ export const seedPhysioExercises = () => [
       "Bring it back to the middle",
     ],
     watchFor: "WORKING = rotation through the trunk with a controlled reach and return. COMPENSATION = standing up to reach, or overbalancing without catching himself.",
+    quickStretch: "lateral trunk on the reaching side", isStanding: false,
     mediaUrl: "", defaultDualTask: true,
   },
   {
@@ -319,6 +323,7 @@ export const seedPhysioExercises = () => [
       "Bring it back slowly",
     ],
     watchFor: "WORKING = a controlled reach-and-return with the elbow extending. COMPENSATION = the trunk leaning forward to substitute for arm reach.",
+    quickStretch: "triceps", isStanding: false,
     mediaUrl: "", defaultDualTask: false,
   },
   {
@@ -326,10 +331,11 @@ export const seedPhysioExercises = () => [
     instructions: "A rolled towel or soft ball placed in the hand.",
     cues: [
       "Squeeze it as hard as you can",
-      "Hold it",
+      "Squeeze again on my count — one, two, three",
       "Now let go slowly",
     ],
     watchFor: "WORKING = a full, sustained squeeze with a controlled release. COMPENSATION = using the other hand to help close the grip.",
+    quickStretch: "finger flexors — open the hand briskly first", isStanding: false,
     mediaUrl: "", defaultDualTask: false,
   },
   {
@@ -338,9 +344,10 @@ export const seedPhysioExercises = () => [
     cues: [
       "Push down through both feet",
       "Stand up tall",
-      "Hold — feel your legs taking the weight",
+      "Push, ease, push again — keep pushing with the beat",
     ],
     watchFor: "WORKING = an active push through the legs with the knees not buckling. COMPENSATION = hanging in the harness with no active push.",
+    quickStretch: "quads and calf, both legs, before he takes the load", isStanding: true,
     mediaUrl: "", defaultDualTask: false,
   },
   {
@@ -349,9 +356,10 @@ export const seedPhysioExercises = () => [
     cues: [
       "Straighten your knees",
       "Lock them — feel them go straight",
-      "Hold it there",
+      "Straighten, soften, straighten again — with the count",
     ],
-    watchFor: "WORKING = active knee extension held without support. COMPENSATION = the knees staying bent, or buckling under load.",
+    watchFor: "WORKING = active knee extension he re-drives each beat. COMPENSATION = the knees staying bent, or buckling under load.",
+    quickStretch: "quads, both legs", isStanding: true,
     mediaUrl: "", defaultDualTask: false,
   },
 ];
