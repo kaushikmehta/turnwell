@@ -18,7 +18,7 @@ export function PhysioSetup({ physioBank, start, back }) {
     if (ex.dormant) return;
     if (isSelected(ex.id)) {
       setSelected(selected.filter((s) => s.id !== ex.id));
-    } else if (selected.length < 4) {
+    } else {
       setSelected([...selected, ex]);
       setDualTask((d) => ({ ...d, [ex.id]: ex.defaultDualTask }));
     }
@@ -38,7 +38,7 @@ export function PhysioSetup({ physioBank, start, back }) {
   };
 
   const addCustom = () => {
-    if (!customTitle.trim() || selected.length >= 4) return;
+    if (!customTitle.trim()) return;
     const id = "custom-" + Date.now() + "-" + customIdSeq++;
     const ex = {
       id, title: customTitle.trim(), kind: "custom",
@@ -61,8 +61,9 @@ export function PhysioSetup({ physioBank, start, back }) {
 
   const count = selected.length;
   const estMinutes = count * MINUTES_PER_EXERCISE;
-  const overTarget = estMinutes > 40;
-  const canBegin = count >= 2 && count <= 4;
+  const overCount = count > 4;
+  const overTarget = estMinutes > 40 || overCount;
+  const canBegin = count >= 2;
 
   const begin = () => {
     const items = selected.map((ex) => ({ ...ex, dualTask: !!dualTask[ex.id] }));
@@ -74,7 +75,8 @@ export function PhysioSetup({ physioBank, start, back }) {
       <BackBtn onClick={back} />
       <h2 className="tw-serif" style={{ fontSize: 28, margin: "12px 0 4px" }}>Set up the session</h2>
       <p style={{ color: C.inkSoft, margin: "0 0 20px", fontSize: 15 }}>
-        Pick 2–4 exercises for today. You run this live, side by side with Akki.
+        Pick 2–4 exercises for today. You run this live, side by side with Akki. You can add
+        more than 4 if you need to — you'll see a flag once you do.
       </p>
 
       {isRestDay ? (
@@ -104,15 +106,19 @@ export function PhysioSetup({ physioBank, start, back }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
         {activeBank.map((ex) => {
           const on = isSelected(ex.id);
-          const disabled = !on && count >= 4;
+          const overLimit = on && selected.findIndex((s) => s.id === ex.id) >= 4;
           return (
-            <div key={ex.id} style={{ background: on ? C.clayTint : C.surface, border: `1.5px solid ${on ? C.clay : C.line}`,
-              borderRadius: 14, padding: "13px 15px", opacity: disabled ? .5 : 1 }}>
-              <label className="tw-focus" style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: disabled ? "default" : "pointer" }}>
-                <input type="checkbox" checked={on} disabled={disabled} onChange={() => toggleSeeded(ex)}
+            <div key={ex.id} style={{ background: overLimit ? "#F6E7E7" : on ? C.clayTint : C.surface,
+              border: `1.5px solid ${overLimit ? "#B15353" : on ? C.clay : C.line}`,
+              borderRadius: 14, padding: "13px 15px" }}>
+              <label className="tw-focus" style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+                <input type="checkbox" checked={on} onChange={() => toggleSeeded(ex)}
                   style={{ width: 18, height: 18, accentColor: C.clay, marginTop: 2, flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>{ex.title}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>
+                    {ex.title}
+                    {overLimit && <span style={{ fontSize: 11, color: "#8C3A3A", fontWeight: 700, marginLeft: 8 }}>· over the 4-exercise guideline</span>}
+                  </div>
                   <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>
                     {ex.instructions.length > 100 ? ex.instructions.slice(0, 100) + "…" : ex.instructions}
                   </div>
@@ -129,11 +135,15 @@ export function PhysioSetup({ physioBank, start, back }) {
           );
         })}
 
-        {selected.filter((s) => s.kind === "custom").map((ex) => (
-          <div key={ex.id} style={{ background: C.clayTint, border: `1.5px solid ${C.clay}`, borderRadius: 14, padding: "13px 15px" }}>
+        {selected.filter((s) => s.kind === "custom").map((ex) => {
+          const overLimit = selected.findIndex((s) => s.id === ex.id) >= 4;
+          return (
+          <div key={ex.id} style={{ background: overLimit ? "#F6E7E7" : C.clayTint, border: `1.5px solid ${overLimit ? "#B15353" : C.clay}`, borderRadius: 14, padding: "13px 15px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>{ex.title} <span style={{ fontSize: 11, color: C.stone, fontWeight: 600 }}>· typed in</span></div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>{ex.title} <span style={{ fontSize: 11, color: C.stone, fontWeight: 600 }}>· typed in</span>
+                  {overLimit && <span style={{ fontSize: 11, color: "#8C3A3A", fontWeight: 700, marginLeft: 8 }}>· over the 4-exercise guideline</span>}
+                </div>
                 {ex.instructions && <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 3 }}>{ex.instructions}</div>}
               </div>
               <button className="tw-focus" onClick={() => setSelected(selected.filter((s) => s.id !== ex.id))}
@@ -145,7 +155,8 @@ export function PhysioSetup({ physioBank, start, back }) {
               <span style={{ fontSize: 12.5, fontWeight: 600, color: C.sageDeep }}>Dual-task this one</span>
             </label>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {probeBank.length > 0 && (
@@ -154,15 +165,19 @@ export function PhysioSetup({ physioBank, start, back }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
             {probeBank.map((ex) => {
               const on = isSelected(ex.id);
-              const disabled = !on && count >= 4;
+              const overLimit = on && selected.findIndex((s) => s.id === ex.id) >= 4;
               return (
-                <div key={ex.id} style={{ background: on ? C.clayTint : C.surface, border: `1.5px solid ${on ? C.clay : C.line}`,
-                  borderRadius: 14, padding: "13px 15px", opacity: disabled ? .5 : 1 }}>
-                  <label className="tw-focus" style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: disabled ? "default" : "pointer" }}>
-                    <input type="checkbox" checked={on} disabled={disabled} onChange={() => toggleSeeded(ex)}
+                <div key={ex.id} style={{ background: overLimit ? "#F6E7E7" : on ? C.clayTint : C.surface,
+                  border: `1.5px solid ${overLimit ? "#B15353" : on ? C.clay : C.line}`,
+                  borderRadius: 14, padding: "13px 15px" }}>
+                  <label className="tw-focus" style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+                    <input type="checkbox" checked={on} onChange={() => toggleSeeded(ex)}
                       style={{ width: 18, height: 18, accentColor: C.clay, marginTop: 2, flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>{ex.title}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>
+                        {ex.title}
+                        {overLimit && <span style={{ fontSize: 11, color: "#8C3A3A", fontWeight: 700, marginLeft: 8 }}>· over the 4-exercise guideline</span>}
+                      </div>
                       <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>
                         {ex.instructions.length > 100 ? ex.instructions.slice(0, 100) + "…" : ex.instructions}
                       </div>
@@ -196,33 +211,31 @@ export function PhysioSetup({ physioBank, start, back }) {
         </>
       )}
 
-      {count < 4 && (
-        customOpen ? (
-          <div style={{ background: C.surface, border: `1px dashed ${C.line}`, borderRadius: 14, padding: "14px 15px", marginBottom: 20 }}>
-            <Field label="Exercise name">
-              <input value={customTitle} onChange={(e) => setCustomTitle(e.target.value)} style={inputStyle} placeholder="e.g. Standing side-taps" />
-            </Field>
-            <Field label="Instructions (optional)">
-              <textarea value={customInstructions} onChange={(e) => setCustomInstructions(e.target.value)} rows={2} style={inputStyle} />
-            </Field>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="tw-focus tw-lift" disabled={!customTitle.trim()} onClick={addCustom}
-                style={{ flex: 1, background: customTitle.trim() ? C.clay : C.line, color: customTitle.trim() ? "#fff" : C.inkSoft,
-                  border: "none", borderRadius: 12, padding: "12px", fontSize: 14.5, fontWeight: 700 }}>
-                Add to session
-              </button>
-              <button className="tw-focus" onClick={() => setCustomOpen(false)}
-                style={{ background: "none", border: `1.5px solid ${C.line}`, color: C.stone, borderRadius: 12, padding: "12px 16px", fontSize: 14, fontWeight: 600 }}>
-                Cancel
-              </button>
-            </div>
+      {customOpen ? (
+        <div style={{ background: C.surface, border: `1px dashed ${C.line}`, borderRadius: 14, padding: "14px 15px", marginBottom: 20 }}>
+          <Field label="Exercise name">
+            <input value={customTitle} onChange={(e) => setCustomTitle(e.target.value)} style={inputStyle} placeholder="e.g. Standing side-taps" />
+          </Field>
+          <Field label="Instructions (optional)">
+            <textarea value={customInstructions} onChange={(e) => setCustomInstructions(e.target.value)} rows={2} style={inputStyle} />
+          </Field>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="tw-focus tw-lift" disabled={!customTitle.trim()} onClick={addCustom}
+              style={{ flex: 1, background: customTitle.trim() ? C.clay : C.line, color: customTitle.trim() ? "#fff" : C.inkSoft,
+                border: "none", borderRadius: 12, padding: "12px", fontSize: 14.5, fontWeight: 700 }}>
+              Add to session
+            </button>
+            <button className="tw-focus" onClick={() => setCustomOpen(false)}
+              style={{ background: "none", border: `1.5px solid ${C.line}`, color: C.stone, borderRadius: 12, padding: "12px 16px", fontSize: 14, fontWeight: 600 }}>
+              Cancel
+            </button>
           </div>
-        ) : (
-          <button className="tw-focus" onClick={() => setCustomOpen(true)}
-            style={{ fontSize: 13.5, fontWeight: 600, color: C.sage, background: "none", border: "none", padding: "6px 2px", marginBottom: 20 }}>
-            + Type in a new exercise
-          </button>
-        )
+        </div>
+      ) : (
+        <button className="tw-focus" onClick={() => setCustomOpen(true)}
+          style={{ fontSize: 13.5, fontWeight: 600, color: C.sage, background: "none", border: "none", padding: "6px 2px", marginBottom: 20 }}>
+          + Type in a new exercise
+        </button>
       )}
 
       {selected.length > 1 && (
@@ -231,9 +244,12 @@ export function PhysioSetup({ physioBank, start, back }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
             {selected.map((ex, i) => (
               <div key={ex.id} style={{ display: "flex", alignItems: "center", gap: 10,
-                background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "9px 10px 9px 15px" }}>
-                <span style={{ fontSize: 12.5, color: C.stone, fontWeight: 700, width: 16 }}>{i + 1}</span>
-                <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: C.ink }}>{ex.title}</span>
+                background: i >= 4 ? "#F6E7E7" : C.surface, border: `1px solid ${i >= 4 ? "#B15353" : C.line}`, borderRadius: 12, padding: "9px 10px 9px 15px" }}>
+                <span style={{ fontSize: 12.5, color: i >= 4 ? "#8C3A3A" : C.stone, fontWeight: 700, width: 16 }}>{i + 1}</span>
+                <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: C.ink }}>
+                  {ex.title}
+                  {i >= 4 && <span style={{ display: "block", fontSize: 11, color: "#8C3A3A", fontWeight: 700 }}>Over the 4-exercise guideline</span>}
+                </span>
                 <button className="tw-focus" disabled={i === 0} onClick={() => moveSelected(i, -1)}
                   style={{ background: "none", border: `1.5px solid ${C.line}`, borderRadius: 9, width: 30, height: 30,
                     color: i === 0 ? C.line : C.inkSoft, fontSize: 14, fontWeight: 700, lineHeight: 1 }}>↑</button>
@@ -251,14 +267,16 @@ export function PhysioSetup({ physioBank, start, back }) {
         <span style={{ fontSize: 13, fontWeight: 600, color: overTarget ? C.clayDeep : C.sageDeep }}>
           Estimated length: ~{estMinutes} min
         </span>
-        {overTarget && <span style={{ fontSize: 12, color: C.clayDeep, fontWeight: 600 }}>over the ~40 min target</span>}
+        {overCount
+          ? <span style={{ fontSize: 12, color: C.clayDeep, fontWeight: 600 }}>{count} exercises — above the 4-exercise guideline</span>
+          : overTarget && <span style={{ fontSize: 12, color: C.clayDeep, fontWeight: 600 }}>over the ~40 min target</span>}
       </div>
 
       <button className="tw-focus tw-lift" disabled={!canBegin} onClick={begin}
         style={{ width: "100%", background: canBegin ? C.clay : C.line, color: canBegin ? "#fff" : C.inkSoft,
           border: "none", borderRadius: 16, padding: "17px", fontSize: 17, fontWeight: 700,
           boxShadow: canBegin ? `0 3px 0 ${C.clayDeep}` : "none" }}>
-        {canBegin ? `Begin session · ${count} exercises` : `Pick 2–4 exercises (${count} selected)`}
+        {canBegin ? `Begin session · ${count} exercises` : `Pick at least 2 exercises (${count} selected)`}
       </button>
     </div>
   );
