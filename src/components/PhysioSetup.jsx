@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { C, MINUTES_PER_EXERCISE } from "../constants";
+import { C, MINUTES_PER_EXERCISE, DAY_PLAN } from "../constants";
 import { BackBtn, SectionLabel, Field, inputStyle } from "./shared";
 
 let customIdSeq = 0;
@@ -27,6 +27,15 @@ export function PhysioSetup({ physioBank, start, back }) {
   const activeBank = physioBank.filter((ex) => !ex.dormant && !ex.probeOnly);
   const probeBank = physioBank.filter((ex) => !ex.dormant && ex.probeOnly);
   const dormantBank = physioBank.filter((ex) => ex.dormant);
+
+  const today = DAY_PLAN[new Date().getDay()];
+  const isRestDay = today.ids.length === 0;
+
+  const applyToday = () => {
+    const picks = today.ids.map((id) => physioBank.find((ex) => ex.id === id)).filter(Boolean);
+    setSelected(picks);
+    setDualTask(Object.fromEntries(picks.map((ex) => [ex.id, ex.defaultDualTask])));
+  };
 
   const addCustom = () => {
     if (!customTitle.trim() || selected.length >= 4) return;
@@ -67,6 +76,22 @@ export function PhysioSetup({ physioBank, start, back }) {
       <p style={{ color: C.inkSoft, margin: "0 0 20px", fontSize: 15 }}>
         Pick 2–4 exercises for today. You run this live, side by side with Akki.
       </p>
+
+      {isRestDay ? (
+        <div style={{ background: C.sageTint, border: `1px solid ${C.sage}44`, borderRadius: 16, padding: "18px 20px", marginBottom: 20 }}>
+          <div className="tw-serif" style={{ fontSize: 18, color: C.sageDeep, marginBottom: 6 }}>{today.label}</div>
+          <p style={{ fontSize: 13.5, color: C.ink, margin: 0, lineHeight: 1.45 }}>
+            Recovery happens in the gaps — a rest day is not a lost day. Pick something manually below if you want to override.
+          </p>
+        </div>
+      ) : (
+        <button className="tw-focus tw-lift" onClick={applyToday}
+          style={{ width: "100%", textAlign: "left", background: C.sage, color: "#fff", border: "none",
+            borderRadius: 16, padding: "16px 18px", marginBottom: 20, boxShadow: `0 3px 0 ${C.sageDeep}` }}>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>Today's session · {today.label}</div>
+          <div style={{ fontSize: 12.5, opacity: .9, marginTop: 3 }}>Pre-selects the day's exercises — review and adjust below</div>
+        </button>
+      )}
 
       <label className="tw-focus" style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", marginBottom: 20 }}>
         <input type="checkbox" checked={firstSession} onChange={() => setFirstSession(!firstSession)}

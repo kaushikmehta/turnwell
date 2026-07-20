@@ -138,3 +138,20 @@ export const UNIT_LABELS = {
   task: "times",
 };
 export const unitLabel = (unit) => UNIT_LABELS[unit] || "reps";
+
+/* ================================================================
+   TODAY'S SESSION — weekday presets
+   Three fixed slots (trunk / loading / extensor probe) plus one
+   rotating weekly-emphasis slot. Encoding the week here is what stops
+   an attendant drifting toward the easy and familiar and away from
+   loading once the novelty wears off.
+   ================================================================ */
+export const DAY_PLAN = {
+  1: { label: "Monday · loading",      ids: ["seated-perturbation", "tram-weight-bearing", "extensor-probe", "tram-arm-drive"] },
+  2: { label: "Tuesday · trunk",       ids: ["seated-perturbation", "tram-weight-bearing", "extensor-probe", "seated-reach-limits"] },
+  3: { label: "Wednesday · probe day", ids: ["seated-perturbation", "tram-weight-bearing", "extensor-probe", "knee-extension-probe"] },
+  4: { label: "Thursday · reach",      ids: ["seated-weight-shift-beat", "tram-weight-bearing", "extensor-probe", "cross-midline-reach"] },
+  5: { label: "Friday · long stand",   ids: ["seated-perturbation", "tram-weight-bearing", "extensor-probe", "sit-to-stand-supported"] },
+  6: { label: "Saturday · caregiver",  ids: ["sitting-tolerance", "real-object-task", "cross-midline-reach"] },
+  0: { label: "Sunday · rest day",     ids: [] },
+};
