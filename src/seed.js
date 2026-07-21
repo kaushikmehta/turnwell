@@ -218,41 +218,44 @@ export const seedScenes = () => ([
   },
 ]);
 
-/* ---- picture decks ---- */
-const ph = (bg, label) => `https://placehold.co/1000x700/${bg}/FFFFFF?text=${label}`;
+/* ---- picture decks ----
+   Images live in public/decks/<theme>/<n>.jpg — see public/decks/README.md
+   for the naming convention. A missing file just falls back to the theme
+   label (DeckStage handles the 404), so decks work before photos are added. */
+const deckImg = (theme, n) => `${import.meta.env.BASE_URL}decks/${theme}/${n}.jpg`;
 
 export const seedDecks = () => ([
   {
     id: "dk0", type: "deck", area: "Describing a scene", level: 2, approved: true,
     rung_labels: DECK_RUNGS, encouragement_every: 4, encouragement: DECK_CHEER,
     cards: [
-      { theme: "cars", image_url: ph("BC7A45", "Red+race+car"), fill_blank: "The red car is ___ the race.", model_example: "A red race car is speeding around the track. The driver is winning the race, and the crowd is cheering." },
-      { theme: "cars", image_url: ph("BC7A45", "Classic+vintage+car"), fill_blank: "This old car is ___.", model_example: "This is an old classic car. It is shiny and blue, and it looks very expensive." },
-      { theme: "cars", image_url: ph("BC7A45", "Man+refuelling+car"), fill_blank: "The man is ___ his car.", model_example: "A man is filling his car with petrol. He is standing at the pump, and he looks like he is in a hurry." },
-      { theme: "cars", image_url: ph("BC7A45", "Cars+in+a+traffic+jam"), fill_blank: "The cars are ___ in traffic.", model_example: "The cars are stuck in a traffic jam. Nothing is moving, and the drivers look frustrated." },
-      { theme: "cars", image_url: ph("BC7A45", "Mechanic+under+the+bonnet"), fill_blank: "The mechanic is ___ the car.", model_example: "A mechanic is fixing the car. He is under the bonnet, checking the engine with his tools." },
+      { theme: "cars", image_url: deckImg("cars", 1), fill_blank: "The red car is ___ the race.", model_example: "A red race car is speeding around the track. The driver is winning the race, and the crowd is cheering." },
+      { theme: "cars", image_url: deckImg("cars", 2), fill_blank: "This old car is ___.", model_example: "This is an old classic car. It is shiny and blue, and it looks very expensive." },
+      { theme: "cars", image_url: deckImg("cars", 3), fill_blank: "The man is ___ his car.", model_example: "A man is filling his car with petrol. He is standing at the pump, and he looks like he is in a hurry." },
+      { theme: "cars", image_url: deckImg("cars", 4), fill_blank: "The cars are ___ in traffic.", model_example: "The cars are stuck in a traffic jam. Nothing is moving, and the drivers look frustrated." },
+      { theme: "cars", image_url: deckImg("cars", 5), fill_blank: "The mechanic is ___ the car.", model_example: "A mechanic is fixing the car. He is under the bonnet, checking the engine with his tools." },
     ],
   },
   {
     id: "dk1", type: "deck", area: "Describing a scene", level: 2, approved: true,
     rung_labels: DECK_RUNGS, encouragement_every: 4, encouragement: DECK_CHEER,
     cards: [
-      { theme: "sport", image_url: ph("3E6B5E", "Footballer+at+goal"), fill_blank: "The player is ___ the ball.", model_example: "A footballer is kicking the ball towards the goal. He is trying to score, and the goalkeeper is diving to save it." },
-      { theme: "sport", image_url: ph("3E6B5E", "Tennis+player+serving"), fill_blank: "The woman is ___ the ball.", model_example: "A woman is serving the ball in a tennis match. She has thrown the ball up high and is about to hit it hard." },
-      { theme: "sport", image_url: ph("3E6B5E", "Fans+celebrating"), fill_blank: "The fans are ___.", model_example: "The fans are celebrating in the stadium. They are cheering and waving their scarves because their team just scored." },
-      { theme: "sport", image_url: ph("3E6B5E", "Runner+at+finish+line"), fill_blank: "The runner is ___ the race.", model_example: "A runner is crossing the finish line. She has won the race, and she looks exhausted but happy." },
-      { theme: "sport", image_url: ph("3E6B5E", "Basketball+player+shooting"), fill_blank: "The player is ___ the ball into the basket.", model_example: "A basketball player is shooting the ball. He has jumped high into the air, aiming for the basket." },
+      { theme: "sport", image_url: deckImg("sport", 1), fill_blank: "The player is ___ the ball.", model_example: "A footballer is kicking the ball towards the goal. He is trying to score, and the goalkeeper is diving to save it." },
+      { theme: "sport", image_url: deckImg("sport", 2), fill_blank: "The woman is ___ the ball.", model_example: "A woman is serving the ball in a tennis match. She has thrown the ball up high and is about to hit it hard." },
+      { theme: "sport", image_url: deckImg("sport", 3), fill_blank: "The fans are ___.", model_example: "The fans are celebrating in the stadium. They are cheering and waving their scarves because their team just scored." },
+      { theme: "sport", image_url: deckImg("sport", 4), fill_blank: "The runner is ___ the race.", model_example: "A runner is crossing the finish line. She has won the race, and she looks exhausted but happy." },
+      { theme: "sport", image_url: deckImg("sport", 5), fill_blank: "The player is ___ the ball into the basket.", model_example: "A basketball player is shooting the ball. He has jumped high into the air, aiming for the basket." },
     ],
   },
   {
     id: "dk2", type: "deck", area: "Describing a scene", level: 3, approved: true,
     rung_labels: DECK_RUNGS, encouragement_every: 4, encouragement: DECK_CHEER,
     cards: [
-      { theme: "film", image_url: ph("2E5245", "Cinema+and+popcorn"), fill_blank: "The man is ___ a film.", model_example: "A man is sitting in the cinema, watching a film. He is holding a big box of popcorn, and the screen is bright in front of him." },
-      { theme: "film", image_url: ph("2E5245", "Actor+on+red+carpet"), fill_blank: "The actor is ___ on the red carpet.", model_example: "An actor is posing on the red carpet. Cameras are flashing everywhere, and she is smiling for the photographers." },
-      { theme: "film", image_url: ph("2E5245", "Director+behind+camera"), fill_blank: "The director is ___ the scene.", model_example: "The director is filming a scene. He is sitting behind the camera, telling the actors what to do." },
-      { theme: "film", image_url: ph("2E5245", "Bright+cinema+screen"), fill_blank: "The cinema screen is ___.", model_example: "The cinema screen is huge and bright. The room is dark, and everyone is watching quietly." },
-      { theme: "film", image_url: ph("2E5245", "Clapperboard+on+set"), fill_blank: "They are ___ a movie.", model_example: "They are making a movie on set. Someone is holding a clapperboard, ready to start the next take." },
+      { theme: "film", image_url: deckImg("film", 1), fill_blank: "The man is ___ a film.", model_example: "A man is sitting in the cinema, watching a film. He is holding a big box of popcorn, and the screen is bright in front of him." },
+      { theme: "film", image_url: deckImg("film", 2), fill_blank: "The actor is ___ on the red carpet.", model_example: "An actor is posing on the red carpet. Cameras are flashing everywhere, and she is smiling for the photographers." },
+      { theme: "film", image_url: deckImg("film", 3), fill_blank: "The director is ___ the scene.", model_example: "The director is filming a scene. He is sitting behind the camera, telling the actors what to do." },
+      { theme: "film", image_url: deckImg("film", 4), fill_blank: "The cinema screen is ___.", model_example: "The cinema screen is huge and bright. The room is dark, and everyone is watching quietly." },
+      { theme: "film", image_url: deckImg("film", 5), fill_blank: "They are ___ a movie.", model_example: "They are making a movie on set. Someone is holding a clapperboard, ready to start the next take." },
     ],
   },
 ]);
