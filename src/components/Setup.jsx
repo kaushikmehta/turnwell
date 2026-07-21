@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { C, AREAS } from "../constants";
-import { isDeck, isScene } from "../utils";
+import { isDeck, isScene, shuffle } from "../utils";
 import { BackBtn, SectionLabel, Ico } from "./shared";
 
 export function Setup({ bank, start, back }) {
@@ -9,18 +9,24 @@ export function Setup({ bank, start, back }) {
   const [ptype, setPtype] = useState("all");
   const [onlyApproved, setOnlyApproved] = useState(true);
 
+  const allDecks = bank.filter(isDeck);
+  const deckLabel = (d) => [...new Set(d.cards.map((c) => c.theme))].join(", ");
+  const [deckIds, setDeckIds] = useState(() => new Set(allDecks.map((d) => d.id)));
+  const toggleDeck = (id) => { const n = new Set(deckIds); n.has(id) ? n.delete(id) : n.add(id); setDeckIds(n); };
+
   const toggle = (a) => { const n = new Set(picked); n.has(a) ? n.delete(a) : n.add(a); setPicked(n); };
   const typeOf = (b) => (isDeck(b) ? "decks" : isScene(b) ? "scenes" : "lines");
   const pool = bank.filter((b) =>
     picked.has(b.area) &&
     (level === 0 || b.level === level) &&
     (!onlyApproved || b.approved) &&
-    (ptype === "all" || typeOf(b) === ptype));
+    (ptype === "all" || typeOf(b) === ptype) &&
+    (!isDeck(b) || deckIds.has(b.id)));
 
   const nDecks = pool.filter(isDeck).length;
   const nScenes = pool.filter(isScene).length;
   const nLines = pool.length - nScenes - nDecks;
-  const begin = () => { const items = [...pool].sort(() => Math.random() - 0.5); start(items); };
+  const begin = () => { const items = shuffle(pool); start(items); };
 
   return (
     <div className="tw-rise">
@@ -57,6 +63,25 @@ export function Setup({ bank, start, back }) {
           );
         })}
       </div>
+
+      {(ptype === "all" || ptype === "decks") && allDecks.length > 0 && (
+        <>
+          <SectionLabel>Picture deck themes</SectionLabel>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 9, marginBottom: 22 }}>
+            {allDecks.map((d) => {
+              const on = deckIds.has(d.id);
+              return (
+                <button key={d.id} className="tw-focus" onClick={() => toggleDeck(d.id)}
+                  style={{ border: `1.5px solid ${on ? C.clay : C.line}`, background: on ? C.clayTint : C.surface,
+                    color: on ? C.clayDeep : C.inkSoft, borderRadius: 999, padding: "9px 15px", fontSize: 14, fontWeight: 600,
+                    display: "inline-flex", alignItems: "center", gap: 7, textTransform: "capitalize" }}>
+                  {on && <span style={{ color: C.clay }}>{Ico.check}</span>}{deckLabel(d)} <span style={{ opacity: .55, fontWeight: 500 }}>{d.cards.length}</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       <SectionLabel>Sentence length</SectionLabel>
       <div style={{ display: "flex", gap: 9, marginBottom: 22 }}>
