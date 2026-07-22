@@ -46,7 +46,6 @@ export const AREAS = [
 ];
 
 export const DECK_RUNGS = { name: "Name what you see", two_words: "Two words together", fill: "Fill in the blank", describe: "Describe it — 2–3 sentences" };
-export const DECK_CHEER = ["You're doing brilliantly — keep going.", "That was a full sentence. Nice work.", "Great describing — you built that yourself.", "Take your time. You've got this."];
 
 /* ---- reading & comprehension ----
    Same 5-tier structure/scoring as RATINGS, so support levels stay comparable

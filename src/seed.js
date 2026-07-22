@@ -1,4 +1,4 @@
-import { DECK_RUNGS, DECK_CHEER } from "./constants";
+import { DECK_RUNGS } from "./constants";
 
 /* ---- sentences ---- */
 export const seedLines = () => [
@@ -227,7 +227,7 @@ const deckImg = (theme, n) => `${import.meta.env.BASE_URL}decks/${theme}/${n}.jp
 export const seedDecks = () => ([
   {
     id: "dk0", type: "deck", area: "Describing a scene", level: 2, approved: true,
-    rung_labels: DECK_RUNGS, encouragement_every: 4, encouragement: DECK_CHEER,
+    rung_labels: DECK_RUNGS,
     cards: [
       { theme: "cars", image_url: deckImg("cars", 1), fill_blank: "The red car is ___ the race.", model_example: "A red race car is speeding around the track. The driver is winning the race, and the crowd is cheering." },
       { theme: "cars", image_url: deckImg("cars", 2), fill_blank: "This old car is ___.", model_example: "This is an old classic car. It is shiny and blue, and it looks very expensive." },
@@ -238,7 +238,7 @@ export const seedDecks = () => ([
   },
   {
     id: "dk1", type: "deck", area: "Describing a scene", level: 2, approved: true,
-    rung_labels: DECK_RUNGS, encouragement_every: 4, encouragement: DECK_CHEER,
+    rung_labels: DECK_RUNGS,
     cards: [
       { theme: "sport", image_url: deckImg("sport", 1), fill_blank: "The player is ___ the ball.", model_example: "A footballer is kicking the ball towards the goal. He is trying to score, and the goalkeeper is diving to save it." },
       { theme: "sport", image_url: deckImg("sport", 2), fill_blank: "The woman is ___ the ball.", model_example: "A woman is serving the ball in a tennis match. She has thrown the ball up high and is about to hit it hard." },
@@ -249,7 +249,7 @@ export const seedDecks = () => ([
   },
   {
     id: "dk2", type: "deck", area: "Describing a scene", level: 3, approved: true,
-    rung_labels: DECK_RUNGS, encouragement_every: 4, encouragement: DECK_CHEER,
+    rung_labels: DECK_RUNGS,
     cards: [
       { theme: "film", image_url: deckImg("film", 1), fill_blank: "The man is ___ a film.", model_example: "A man is sitting in the cinema, watching a film. He is holding a big box of popcorn, and the screen is bright in front of him." },
       { theme: "film", image_url: deckImg("film", 2), fill_blank: "The actor is ___ on the red carpet.", model_example: "An actor is posing on the red carpet. Cameras are flashing everywhere, and she is smiling for the photographers." },

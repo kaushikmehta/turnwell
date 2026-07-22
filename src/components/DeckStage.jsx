@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { C, RATINGS, DECK_RUNGS } from "../constants";
-import { isDeck } from "../utils";
 import { Ico } from "./shared";
 
 export function DeckStage({ run, setRun, finish, quit }) {
@@ -10,15 +9,11 @@ export function DeckStage({ run, setRun, finish, quit }) {
   const [peek, setPeek] = useState(false);
   const [starter, setStarter] = useState(false);
   const [broken, setBroken] = useState(false);
-  const [cheer, setCheer] = useState(null);
 
   const card = item.cards[cardIdx];
   const labels = item.rung_labels || DECK_RUNGS;
-  const every = item.encouragement_every || 0;
   const rungOrder = [labels.name, labels.two_words, card.fill_blank, labels.describe];
   const rungTag = ["Name it", "Two words", "Fill the blank", "Describe"][rungIdx];
-  const firstDeckI = run.items.findIndex(isDeck);
-  const isFirstDeckCard = run.i === firstDeckI && cardIdx === 0;
   const scrollTop = () => { if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); };
   const starterText = (card.model_example || "").split(" ").slice(0, 4).join(" ");
 
@@ -27,8 +22,6 @@ export function DeckStage({ run, setRun, finish, quit }) {
     const lastCard = cardIdx + 1 >= item.cards.length;
     const lastItem = run.i + 1 >= run.items.length;
     if (lastCard && lastItem) { finish({ items: run.items, results, notes: run.notes }); return; }
-    const cheerDue = every > 0 && (cardIdx + 1) % every === 0 && !lastCard;
-    if (cheerDue) { setRun({ ...run, results }); setCheer(item.encouragement?.[Math.floor(Math.random() * item.encouragement.length)] || "Keep going."); scrollTop(); return; }
     if (!lastCard) { setRun({ ...run, results }); nextCard(); }
     else { setRun({ ...run, results, i: run.i + 1 }); }
   };
@@ -38,19 +31,6 @@ export function DeckStage({ run, setRun, finish, quit }) {
     if (lastItem) { finish({ items: run.items, results: run.results, notes: run.notes || "" }); return; }
     setRun({ ...run, i: run.i + 1 });
   };
-
-  if (cheer) {
-    return (
-      <div className="tw-rise" style={{ textAlign: "center", padding: "40px 12px" }}>
-        <div style={{ fontSize: 40, marginBottom: 10 }}>🌱</div>
-        <p className="tw-serif" style={{ fontSize: "clamp(24px,5vw,34px)", lineHeight: 1.25, margin: "0 auto 26px", maxWidth: 460, fontWeight: 500 }}>{cheer}</p>
-        <button className="tw-focus tw-lift" onClick={nextCard}
-          style={{ background: C.sage, color: "#fff", border: "none", borderRadius: 14, padding: "15px 30px", fontSize: 16, fontWeight: 700, boxShadow: `0 3px 0 ${C.sageDeep}` }}>
-          Keep going
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -88,13 +68,7 @@ export function DeckStage({ run, setRun, finish, quit }) {
         <p className="tw-serif" style={{ fontSize: "clamp(22px,5vw,34px)", lineHeight: 1.25, margin: 0, fontWeight: 500 }}>{rungOrder[rungIdx]}</p>
       </div>
 
-      {isFirstDeckCard && rungIdx === 3 && (
-        <div className="tw-rise" style={{ marginTop: 14, background: C.sageTint, borderRadius: 16, padding: "16px 18px", border: `1px solid ${C.sage}33` }}>
-          <div className="tw-eyebrow" style={{ color: C.sageDeep, marginBottom: 7 }}>An example to aim for</div>
-          <p style={{ fontSize: "clamp(16px,3.6vw,19px)", lineHeight: 1.4, margin: 0, color: C.ink }}>{card.model_example}</p>
-        </div>
-      )}
-      {starter && !(isFirstDeckCard && rungIdx === 3) && (
+      {starter && (
         <div className="tw-rise" style={{ marginTop: 12, background: C.clayTint, borderRadius: 14, padding: "13px 16px" }}>
           <span style={{ fontSize: 12, color: C.clayDeep, fontWeight: 700 }}>Starter: </span>
           <span style={{ fontSize: 16, color: C.ink }}>{starterText}…</span>
