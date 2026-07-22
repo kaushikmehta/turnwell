@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { C } from "../constants";
+import { shuffle } from "../utils";
 import { BackBtn, SectionLabel, Field, inputStyle } from "./shared";
 
 let customIdSeq = 0;
@@ -19,6 +20,7 @@ export function ReadingSetup({ passages, start, back }) {
   const [randomCount, setRandomCount] = useState(3);
   const [randomMin, setRandomMin] = useState(minLevelAvail);
   const [randomMax, setRandomMax] = useState(maxLevelAvail);
+  const [shuffleOn, setShuffleOn] = useState(false);
 
   const isSelected = (id) => selected.some((s) => s.id === id);
 
@@ -29,8 +31,7 @@ export function ReadingSetup({ passages, start, back }) {
 
   const randomize = () => {
     const pool = sorted.filter((p) => p.level >= randomMin && p.level <= randomMax);
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    const picked = shuffled.slice(0, Math.min(randomCount, shuffled.length)).sort((a, b) => a.level - b.level);
+    const picked = shuffle(pool).slice(0, Math.min(randomCount, pool.length)).sort((a, b) => a.level - b.level);
     setSelected(picked);
   };
 
@@ -184,7 +185,14 @@ export function ReadingSetup({ passages, start, back }) {
         </>
       )}
 
-      <button className="tw-focus tw-lift" disabled={!canBegin} onClick={() => start(selected)}
+      <label className="tw-focus" style={{ display: "flex", alignItems: "center", gap: 11, cursor: "pointer", marginBottom: 16,
+        background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "13px 15px" }}>
+        <input type="checkbox" checked={shuffleOn} onChange={(e) => setShuffleOn(e.target.checked)} style={{ width: 18, height: 18, accentColor: C.sage }} />
+        <span style={{ fontSize: 14.5 }}>Shuffle order</span>
+        <span style={{ fontSize: 12.5, color: C.stone }}>— off reads them in the order shown above</span>
+      </label>
+
+      <button className="tw-focus tw-lift" disabled={!canBegin} onClick={() => start(shuffleOn ? shuffle(selected) : selected)}
         style={{ width: "100%", background: canBegin ? C.sage : C.line, color: canBegin ? "#fff" : C.inkSoft,
           border: "none", borderRadius: 16, padding: "17px", fontSize: 17, fontWeight: 700,
           boxShadow: canBegin ? `0 3px 0 ${C.sageDeep}` : "none" }}>

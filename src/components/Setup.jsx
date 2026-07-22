@@ -8,6 +8,7 @@ export function Setup({ bank, start, back }) {
   const [level, setLevel] = useState(0);
   const [ptype, setPtype] = useState("all");
   const [onlyApproved, setOnlyApproved] = useState(true);
+  const [shuffleOn, setShuffleOn] = useState(true);
 
   const allDecks = bank.filter(isDeck);
   const deckLabel = (d) => [...new Set(d.cards.map((c) => c.theme))].join(", ");
@@ -26,7 +27,7 @@ export function Setup({ bank, start, back }) {
   const nDecks = pool.filter(isDeck).length;
   const nScenes = pool.filter(isScene).length;
   const nLines = pool.length - nScenes - nDecks;
-  const begin = () => { const items = shuffle(pool); start(items); };
+  const begin = () => { const items = shuffleOn ? shuffle(pool) : pool; start(items); };
 
   return (
     <div className="tw-rise">
@@ -94,10 +95,17 @@ export function Setup({ bank, start, back }) {
         ))}
       </div>
 
-      <label className="tw-focus" style={{ display: "flex", alignItems: "center", gap: 11, cursor: "pointer", marginBottom: 22,
+      <label className="tw-focus" style={{ display: "flex", alignItems: "center", gap: 11, cursor: "pointer", marginBottom: 10,
         background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "13px 15px" }}>
         <input type="checkbox" checked={onlyApproved} onChange={(e) => setOnlyApproved(e.target.checked)} style={{ width: 18, height: 18, accentColor: C.sage }} />
         <span style={{ fontSize: 14.5 }}>Only use content the therapist has approved</span>
+      </label>
+
+      <label className="tw-focus" style={{ display: "flex", alignItems: "center", gap: 11, cursor: "pointer", marginBottom: 22,
+        background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "13px 15px" }}>
+        <input type="checkbox" checked={shuffleOn} onChange={(e) => setShuffleOn(e.target.checked)} style={{ width: 18, height: 18, accentColor: C.sage }} />
+        <span style={{ fontSize: 14.5 }}>Shuffle order</span>
+        <span style={{ fontSize: 12.5, color: C.stone }}>— off plays sentences, then scenes, then decks, in a fixed order</span>
       </label>
 
       <button className="tw-focus tw-lift" disabled={pool.length === 0} onClick={begin}
