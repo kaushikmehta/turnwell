@@ -102,9 +102,10 @@ export const QUICK_STRETCH_NOTE =
   "Brisk 5–10 second stretch into the muscle you're about to ask for. This is neural priming, not tissue work — it raises motor-neuron excitability so a weak signal can reach threshold, and the effect fades within about a minute. It has to happen now, not at the start of the session.";
 
 /* Rhythm — Rule 2. Substitutes for the missing internal timekeeper. */
-export const METRONOME_DEFAULT_BPM = 60;
-export const METRONOME_MIN_BPM = 30;
+export const METRONOME_DEFAULT_BPM = 20;
+export const METRONOME_MIN_BPM = 10;
 export const METRONOME_MAX_BPM = 120;
+export const METRONOME_STEP_BPM = 2;
 
 /* Fade probe — once per session, at closing. */
 export const FADE_PROBE_NOTE =
