@@ -44,6 +44,15 @@ export function PhysioSummary({ session, onDone }) {
         </div>
       </div>
 
+      {session.recall && session.recall.total > 0 && (
+        <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 14, padding: "12px 15px", marginBottom: 14 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>Recalled {session.recall.recalled} of {session.recall.total}</span>
+          <span style={{ fontSize: 12.5, color: C.stone }}>
+            {" "}from last session{session.recall.daysAgo != null ? ` · ${session.recall.daysAgo === 1 ? "yesterday" : `${session.recall.daysAgo} days ago`}` : ""}
+          </span>
+        </div>
+      )}
+
       {standingTotal > 0 && (
         <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 14, padding: "12px 15px", marginBottom: 14 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{standingTotal} min standing</span>

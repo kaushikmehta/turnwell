@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { C } from "../../constants";
+import { C, RECALL_RATINGS } from "../../constants";
 import { SectionLabel } from "../shared";
 
 function RatingInput({ label, value, onChange }) {
@@ -12,18 +12,77 @@ function RatingInput({ label, value, onChange }) {
   );
 }
 
-export function Opening({ items, firstSession, onNext }) {
+/* The recall step. The reference list was confirmed at setup — here it's only
+   asked and scored, live, on the cue ladder. The middle rung (a category cue)
+   keeps a post-weekend Monday fair rather than reading as decline. */
+function Recall({ refDay, entries, setScore }) {
+  const gapLabel = refDay && refDay.daysAgo != null
+    ? `${refDay.dayLabel ? refDay.dayLabel.split(" · ")[0] : "Last session"} · ${refDay.daysAgo === 1 ? "yesterday" : `${refDay.daysAgo} days ago`}`
+    : null;
+
+  return (
+    <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.sage }}>1. Recall the last session</div>
+        {gapLabel && <div style={{ fontSize: 11.5, color: C.stone, fontWeight: 600 }}>{gapLabel}</div>}
+      </div>
+      <p style={{ fontSize: 13.5, color: C.inkSoft, margin: "0 0 12px", lineHeight: 1.45 }}>
+        Ask Akki to recall what you worked on last time — 1, 2, 3… Score how much help each one took.
+        {refDay && refDay.daysAgo >= 2 ? " It's a longer gap, so a category cue is expected — that's not a miss." : ""}
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        {entries.map((e) => (
+          <div key={e.id} style={{ border: `1px solid ${C.line}`, borderRadius: 12, padding: "10px 12px", background: "#fff" }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, marginBottom: 8 }}>{e.title}</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {RECALL_RATINGS.map((lvl) => {
+                const on = e.score === lvl.key;
+                return (
+                  <button key={lvl.key} className="tw-focus" onClick={() => setScore(e.id, lvl.key)}
+                    style={{ flex: 1, border: `1.5px solid ${on ? lvl.color : C.line}`,
+                      background: on ? lvl.tint : C.surface, color: on ? lvl.color : C.inkSoft,
+                      borderRadius: 10, padding: "8px 4px", fontSize: 12.5, fontWeight: 700, lineHeight: 1.2 }}>
+                    {lvl.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function Opening({ items, firstSession, recallRef, onNext }) {
   const [starId, setStarId] = useState(null);
   const [before, setBefore] = useState({ tired: "", mood: "", satisfaction: "" });
 
-  const canContinue = !!starId;
+  const hasRecall = !firstSession && recallRef && recallRef.reference && recallRef.reference.length > 0;
+  const [recallEntries, setRecallEntries] = useState(() =>
+    hasRecall ? recallRef.reference.map((r) => ({ id: r.id, title: r.title, score: null })) : []
+  );
+  const setScore = (id, key) => setRecallEntries((es) => es.map((e) => (e.id === id ? { ...e, score: key } : e)));
+
+  const recallReady = !hasRecall || recallEntries.every((e) => e.score != null);
+  const canContinue = !!starId && recallReady;
 
   const submit = () => {
     const star = items.find((i) => i.id === starId);
     const b = before.tired || before.mood || before.satisfaction
       ? { tired: before.tired || "—", mood: before.mood || "—", satisfaction: before.satisfaction || "—" }
       : null;
-    onNext({ star: { id: star.id, title: star.title }, before: b });
+    let recall = null;
+    if (hasRecall) {
+      const recalled = recallEntries.filter((e) => e.score === "own" || e.score === "cue").length;
+      recall = {
+        dayLabel: recallRef.dayLabel, daysAgo: recallRef.daysAgo,
+        entries: recallEntries.map((e) => ({ id: e.id, title: e.title, score: e.score })),
+        recalled, total: recallEntries.length,
+      };
+    }
+    onNext({ star: { id: star.id, title: star.title }, before: b, recall });
   };
 
   return (
@@ -31,11 +90,8 @@ export function Opening({ items, firstSession, onNext }) {
       <SectionLabel>Opening</SectionLabel>
       <h2 className="tw-serif" style={{ fontSize: 26, margin: "0 0 18px" }}>Before you start</h2>
 
-      {!firstSession && (
-        <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.sage, marginBottom: 5 }}>1. Recall</div>
-          <p style={{ fontSize: 15.5, color: C.ink, margin: 0, lineHeight: 1.45 }}>Ask Akki to recall what we did last time — 1, 2, 3…</p>
-        </div>
+      {hasRecall && (
+        <Recall refDay={recallRef} entries={recallEntries} setScore={setScore} />
       )}
 
       <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
@@ -73,7 +129,7 @@ export function Opening({ items, firstSession, onNext }) {
         style={{ width: "100%", background: canContinue ? C.clay : C.line, color: canContinue ? "#fff" : C.inkSoft,
           border: "none", borderRadius: 16, padding: "17px", fontSize: 17, fontWeight: 700,
           boxShadow: canContinue ? `0 3px 0 ${C.clayDeep}` : "none" }}>
-        {canContinue ? "Continue to estimates" : "Pick a star exercise to continue"}
+        {!starId ? "Pick a star exercise to continue" : !recallReady ? "Score each recall item to continue" : "Continue to estimates"}
       </button>
     </div>
   );

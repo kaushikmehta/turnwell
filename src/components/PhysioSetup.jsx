@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { C, MINUTES_PER_EXERCISE, DAY_PLAN } from "../constants";
+import { C, MINUTES_PER_EXERCISE, DAY_PLAN, previousTrainingDay } from "../constants";
 import { BackBtn, SectionLabel, Field, inputStyle } from "./shared";
 
 let customIdSeq = 0;
@@ -11,6 +11,22 @@ export function PhysioSetup({ physioBank, start, back }) {
   const [customOpen, setCustomOpen] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
   const [customInstructions, setCustomInstructions] = useState("");
+
+  // Recall reference — confirmed here at setup, scored live at the opening.
+  const prevDay = previousTrainingDay(new Date().getDay());
+  const [recallRef, setRecallRef] = useState(() =>
+    prevDay
+      ? prevDay.ids.map((id) => physioBank.find((ex) => ex.id === id)).filter(Boolean).map((ex) => ({ id: ex.id, title: ex.title }))
+      : []
+  );
+  const [recallAdding, setRecallAdding] = useState("");
+  const recallAddable = physioBank.filter((ex) => !ex.dormant && !recallRef.some((e) => e.id === ex.id));
+  const removeRecall = (id) => setRecallRef(recallRef.filter((e) => e.id !== id));
+  const addRecall = (id) => {
+    const ex = physioBank.find((x) => x.id === id);
+    if (ex && !recallRef.some((e) => e.id === id)) setRecallRef([...recallRef, { id: ex.id, title: ex.title }]);
+    setRecallAdding("");
+  };
 
   const isSelected = (id) => selected.some((s) => s.id === id);
 
@@ -69,7 +85,10 @@ export function PhysioSetup({ physioBank, start, back }) {
 
   const begin = () => {
     const items = selected.map((ex) => ({ ...ex, dualTask: !!dualTask[ex.id] }));
-    start({ items, firstSession });
+    const recallReference = firstSession
+      ? null
+      : { reference: recallRef, dayLabel: prevDay ? prevDay.label : null, daysAgo: prevDay ? prevDay.daysAgo : null };
+    start({ items, firstSession, recallRef: recallReference });
   };
 
   // Shared card for a seeded pick. Probe cards omit the dual-task sub-toggle.
@@ -135,6 +154,44 @@ export function PhysioSetup({ physioBank, start, back }) {
         <span style={{ fontSize: 14, fontWeight: 600, color: C.ink }}>First session</span>
         <span style={{ fontSize: 12.5, color: C.stone }}>— skips "recall last time" at the opening</span>
       </label>
+
+      {!firstSession && (
+        <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "14px 16px", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, marginBottom: 5 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.sage }}>Last session — for recall</div>
+            {prevDay && (
+              <div style={{ fontSize: 11.5, color: C.stone, fontWeight: 600 }}>
+                {prevDay.label.split(" · ")[0]} · {prevDay.daysAgo === 1 ? "yesterday" : `${prevDay.daysAgo} days ago`}
+              </div>
+            )}
+          </div>
+          <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 11px", lineHeight: 1.45 }}>
+            Confirm what was actually worked on last time. At the opening you'll ask Akki to recall these and score each one.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {recallRef.map((e) => (
+              <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                border: `1px solid ${C.line}`, borderRadius: 11, padding: "9px 12px", background: "#fff" }}>
+                <span style={{ fontSize: 13.5, fontWeight: 600, color: C.ink }}>{e.title}</span>
+                <button className="tw-focus" onClick={() => removeRecall(e.id)}
+                  style={{ background: "none", border: "none", color: C.stone, fontSize: 12, fontWeight: 600 }}>Remove</button>
+              </div>
+            ))}
+            {recallRef.length === 0 && (
+              <p style={{ fontSize: 12.5, color: C.stone, margin: 0, lineHeight: 1.4 }}>
+                Nothing set — add what was worked on last time, or leave empty to skip recall.
+              </p>
+            )}
+          </div>
+          {recallAddable.length > 0 && (
+            <select value={recallAdding} onChange={(e) => addRecall(e.target.value)} className="tw-focus"
+              style={{ width: "100%", marginTop: 9, background: C.surface, border: `1px dashed ${C.line}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, color: C.inkSoft }}>
+              <option value="">+ Add an exercise worked on last time…</option>
+              {recallAddable.map((ex) => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+            </select>
+          )}
+        </div>
+      )}
 
       {tramBank.length > 0 && (
         <>

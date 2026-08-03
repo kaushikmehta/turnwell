@@ -139,6 +139,17 @@ export const UNIT_LABELS = {
 };
 export const unitLabel = (unit) => UNIT_LABELS[unit] || "reps";
 
+/* Session recall — the cognitive opening on any non-first session.
+   Sessions aren't stored, so the facilitator confirms what was worked on
+   last time (pre-filled from the schedule), then scores each item on this
+   short cue ladder. The middle rung — a category prompt — is what keeps a
+   post-weekend Monday score fair rather than reading as decline. */
+export const RECALL_RATINGS = [
+  { score: 0, key: "own",  label: "On his own",   note: "Named it unprompted",           color: C.sage,  tint: C.sageTint },
+  { score: 1, key: "cue",  label: "After a cue",  note: "Came after a category prompt",   color: C.clay,  tint: C.clayTint },
+  { score: 2, key: "miss", label: "Not recalled", note: "Didn't come, even with a cue",   color: C.stone, tint: "#E7EAE6" },
+];
+
 /* ================================================================
    TODAY'S SESSION — weekday presets
    Three fixed slots (trunk / loading / extensor probe) plus one
@@ -155,3 +166,20 @@ export const DAY_PLAN = {
   6: { label: "Saturday · caregiver",  ids: ["sitting-tolerance", "real-object-task", "cross-midline-reach"] },
   0: { label: "Sunday · rest day",     ids: [] },
 };
+
+/* The recall reference. With no session storage, we approximate "last
+   session" from the schedule: the most recent weekday (Mon–Fri) with a plan,
+   walking back from today. Weekends are skipped as a reference so Monday
+   points back at Friday — matching how the sessions actually run, and making
+   the ~3-day gap explicit rather than hidden. Returns null on the very first
+   run of the week with nothing before it. The facilitator always confirms or
+   edits the pre-filled list before scoring — this is only a starting point. */
+export function previousTrainingDay(todayIndex) {
+  for (let back = 1; back <= 7; back++) {
+    const d = (todayIndex - back + 7) % 7;
+    if (d === 0 || d === 6) continue; // weekend — not a recall reference
+    const plan = DAY_PLAN[d];
+    if (plan && plan.ids.length > 0) return { label: plan.label, ids: plan.ids, daysAgo: back };
+  }
+  return null;
+}

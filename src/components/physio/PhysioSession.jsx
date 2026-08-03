@@ -11,6 +11,7 @@ export function PhysioSession({ config, home }) {
   const [priming, setPriming] = useState(null);
   const [star, setStar] = useState(null);
   const [before, setBefore] = useState(null);
+  const [recall, setRecall] = useState(null);
   const [estimates, setEstimates] = useState(null);
   const [loopIndex, setLoopIndex] = useState(0);
   const [results, setResults] = useState([]);
@@ -47,7 +48,7 @@ export function PhysioSession({ config, home }) {
 
   const session = {
     at: Date.now(), items, firstSession: config.firstSession, priming,
-    star, before, after: closingData ? closingData.after : null,
+    star, before, recall, after: closingData ? closingData.after : null,
     results, closing: closingData,
   };
 
@@ -58,8 +59,8 @@ export function PhysioSession({ config, home }) {
       )}
 
       {phase === "opening" && (
-        <Opening items={items} firstSession={config.firstSession}
-          onNext={({ star: s, before: b }) => { setStar(s); setBefore(b); setPhase("estimates"); }} />
+        <Opening items={items} firstSession={config.firstSession} recallRef={config.recallRef}
+          onNext={({ star: s, before: b, recall: r }) => { setStar(s); setBefore(b); setRecall(r); setPhase("estimates"); }} />
       )}
 
       {phase === "estimates" && (

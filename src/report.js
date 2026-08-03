@@ -4,7 +4,7 @@
  * written to be read by a human (the coordinator, later you), not parsed by a script.
  */
 import { ratingByKey, supportWord, isDeck, isScene } from "./utils";
-import { READING_RATINGS, unitLabel } from "./constants";
+import { READING_RATINGS, RECALL_RATINGS, unitLabel } from "./constants";
 
 const understandWord = { yes: "yes", partly: "partly", no: "no" };
 
@@ -105,8 +105,10 @@ const ankleWord = {
   neutral: "reaches neutral", tight: "tight, short of neutral", lost: "not close to neutral",
 };
 
+const recallWord = Object.fromEntries(RECALL_RATINGS.map((r) => [r.key, r.label.toLowerCase()]));
+
 export function buildPhysioReport(session, patientName = "Akki") {
-  const { items, results, star, before, after, closing, priming } = session;
+  const { items, results, star, before, after, closing, priming, recall } = session;
   const dt = new Date(session.at || Date.now());
   const dateStr = dt.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const timeStr = dt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
@@ -124,6 +126,17 @@ export function buildPhysioReport(session, patientName = "Akki") {
     } else {
       lines.push(`After the session: tiredness ${after.tired}/10, mood ${after.mood}/10.`);
     }
+    lines.push("");
+  }
+
+  if (recall && recall.total > 0) {
+    const gap = recall.daysAgo != null
+      ? ` (${recall.dayLabel ? recall.dayLabel.split(" · ")[0] + ", " : ""}${recall.daysAgo === 1 ? "yesterday" : `${recall.daysAgo} days ago`})`
+      : "";
+    lines.push(`Recall of last session${gap}: recalled ${recall.recalled} of ${recall.total}.`);
+    recall.entries.forEach((e) => {
+      lines.push(`   - ${e.title}: ${recallWord[e.score] || e.score}`);
+    });
     lines.push("");
   }
 
