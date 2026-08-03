@@ -159,11 +159,15 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
           )}
 
           {item.dualTask && (
-            <div style={{ background: "#fff", border: `1px dashed ${C.sage}`, borderRadius: 14, padding: "12px 16px", marginBottom: 12 }}>
-              <span style={{ fontSize: 12, color: C.sage, fontWeight: 700 }}>Dual-task: </span>
-              <span style={{ fontSize: 14, color: C.ink }}>{suggestion}</span>
+            <div style={{ background: C.sage, borderRadius: 16, padding: "16px 18px", marginBottom: 12, boxShadow: `0 3px 0 ${C.sageDeep}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ background: "#fff", color: C.sageDeep, fontSize: 11, fontWeight: 800, letterSpacing: ".04em",
+                  borderRadius: 999, padding: "3px 9px", textTransform: "uppercase" }}>Dual-task</span>
+                <span style={{ color: "#fff", opacity: .9, fontSize: 12.5, fontWeight: 600 }}>run this on top of the exercise</span>
+              </div>
+              <p style={{ color: "#fff", fontSize: 17, fontWeight: 700, margin: 0, lineHeight: 1.35 }}>{suggestion}</p>
               {standing && (
-                <p style={{ fontSize: 11.5, color: C.stone, margin: "7px 0 0", lineHeight: 1.4 }}>
+                <p style={{ fontSize: 12, color: "#fff", opacity: .85, margin: "9px 0 0", lineHeight: 1.4 }}>
                   He's standing — keep the load light and rhythmic. If involvement drops, drop the attention task first.
                 </p>
               )}
