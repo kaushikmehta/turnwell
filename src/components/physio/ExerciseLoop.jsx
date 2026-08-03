@@ -48,17 +48,25 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
   const [involvement, setInvolvement] = useState(null);
   const [standingMin, setStandingMin] = useState("");
   const [standingQuality, setStandingQuality] = useState(null);
+  // His estimate was set upfront; he can revise it here before this exercise starts.
+  const [est, setEst] = useState(() => ({ estReps: String(estimate.estReps), estDiff: String(estimate.estDiff) }));
+  const [reviseOpen, setReviseOpen] = useState(false);
 
   const standing = !!item.isStanding;
-  const canSave = actReps !== "" && actDiff !== "" && understood != null && involvement != null
+  const canSave = actReps !== "" && actDiff !== "" && est.estReps !== "" && est.estDiff !== ""
+    && understood != null && involvement != null
     && (!standing || (standingMin !== "" && standingQuality != null));
 
   const save = () => {
-    const est = estimate;
-    const tick = Number(actDiff) === est.estDiff ? "green" : "yellow";
+    const estReps = Number(est.estReps);
+    const estDiff = Number(est.estDiff);
+    const revised = estReps !== estimate.estReps || estDiff !== estimate.estDiff;
+    const tick = Number(actDiff) === estDiff ? "green" : "yellow";
     onFinish({
       id: item.id, title: item.title, unit: item.unit,
-      estReps: est.estReps, estDiff: est.estDiff,
+      estReps, estDiff,
+      estRevised: revised,
+      estOriginal: revised ? { estReps: estimate.estReps, estDiff: estimate.estDiff } : null,
       actReps: Number(actReps), actDiff: Number(actDiff),
       tick, understood, dualTask: !!item.dualTask,
       involvement,
@@ -86,6 +94,39 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
           <SectionLabel>Exercise {index + 1} of {total}{item.dualTask ? " · dual-task" : ""}{standing ? " · standing" : ""}</SectionLabel>
           <h2 className="tw-serif" style={{ fontSize: "clamp(24px,5vw,32px)", margin: "0 0 14px" }}>{item.title}</h2>
 
+          {/* Estimate check — his estimate was set upfront; give him the chance to revise it now. */}
+          <div style={{ background: C.indigoTint, border: `1px solid ${C.indigo}44`, borderRadius: 16, padding: "14px 16px", marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.indigoDeep, marginBottom: 6 }}>Estimate check — before you start</div>
+            <p style={{ fontSize: 13.5, color: C.ink, margin: "0 0 10px", lineHeight: 1.4 }}>
+              Ask Akki if he wants to change his estimate for this one.
+            </p>
+            {!reviseOpen ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <span style={{ fontSize: 14, color: C.ink }}>
+                  He estimated <strong>{est.estReps}</strong> {unitLabel(item.unit)} · difficulty <strong>{est.estDiff}</strong>/10
+                </span>
+                <button className="tw-focus" onClick={() => setReviseOpen(true)}
+                  style={{ flexShrink: 0, background: "#fff", border: `1.5px solid ${C.indigo}`, color: C.indigoDeep,
+                    borderRadius: 10, padding: "8px 12px", fontSize: 13, fontWeight: 700 }}>
+                  Change it
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, color: C.inkSoft, marginBottom: 5 }}>Estimated {unitLabel(item.unit)}</div>
+                  <input type="number" min={0} value={est.estReps} onChange={(e) => setEst({ ...est, estReps: e.target.value })}
+                    className="tw-focus" style={{ width: "100%", background: "#fff", border: `1px solid ${C.line}`, borderRadius: 10, padding: "10px 12px", fontSize: 15, color: C.ink }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, color: C.inkSoft, marginBottom: 5 }}>Estimated difficulty (1–10)</div>
+                  <input type="number" min={1} max={10} value={est.estDiff} onChange={(e) => setEst({ ...est, estDiff: e.target.value })}
+                    className="tw-focus" style={{ width: "100%", background: "#fff", border: `1px solid ${C.line}`, borderRadius: 10, padding: "10px 12px", fontSize: 15, color: C.ink }} />
+                </div>
+              </div>
+            )}
+          </div>
+
           {item.mediaUrl ? (
             <img src={item.mediaUrl} alt={item.title} style={{ width: "100%", borderRadius: 16, marginBottom: 14, display: "block" }} />
           ) : null}
@@ -110,12 +151,22 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
             </span>
           </button>
 
-          <Metronome compact />
-
           {item.instructions && (
             <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 12 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 6 }}>Setup</div>
               <p style={{ fontSize: 15, color: C.ink, margin: 0, lineHeight: 1.45 }}>{item.instructions}</p>
+            </div>
+          )}
+
+          {item.dualTask && (
+            <div style={{ background: "#fff", border: `1px dashed ${C.sage}`, borderRadius: 14, padding: "12px 16px", marginBottom: 12 }}>
+              <span style={{ fontSize: 12, color: C.sage, fontWeight: 700 }}>Dual-task: </span>
+              <span style={{ fontSize: 14, color: C.ink }}>{suggestion}</span>
+              {standing && (
+                <p style={{ fontSize: 11.5, color: C.stone, margin: "7px 0 0", lineHeight: 1.4 }}>
+                  He's standing — keep the load light and rhythmic. If involvement drops, drop the attention task first.
+                </p>
+              )}
             </div>
           )}
 
@@ -135,17 +186,7 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
             </div>
           )}
 
-          {item.dualTask && (
-            <div style={{ background: "#fff", border: `1px dashed ${C.sage}`, borderRadius: 14, padding: "12px 16px", marginBottom: 12 }}>
-              <span style={{ fontSize: 12, color: C.sage, fontWeight: 700 }}>Dual-task: </span>
-              <span style={{ fontSize: 14, color: C.ink }}>{suggestion}</span>
-              {standing && (
-                <p style={{ fontSize: 11.5, color: C.stone, margin: "7px 0 0", lineHeight: 1.4 }}>
-                  He's standing — keep the load light and rhythmic. If involvement drops, drop the attention task first.
-                </p>
-              )}
-            </div>
-          )}
+          <Metronome compact />
 
           <button className="tw-focus tw-lift" onClick={() => setStopped(!stopped)}
             style={{ width: "100%", background: stopped ? C.clayDeep : C.clay, color: "#fff", border: "none",

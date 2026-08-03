@@ -184,6 +184,9 @@ export function buildPhysioReport(session, patientName = "Akki") {
     lines.push(`${i + 1}. ${r.title}`);
     lines.push(`   ${unit.charAt(0).toUpperCase() + unit.slice(1)}: ${r.actReps} actual (he estimated ${r.estReps})`);
     lines.push(`   Difficulty: ${r.actDiff}/10 actual, predicted ${r.estDiff}/10 — ${tickWord} (${r.tick})`);
+    if (r.estRevised && r.estOriginal) {
+      lines.push(`   (revised before starting — from ${r.estOriginal.estReps} ${unit} / ${r.estOriginal.estDiff}/10)`);
+    }
     lines.push(`   INVOLVEMENT: ${involveWord[r.involvement] ?? r.involvement}`);
     if (r.standing) lines.push(`   Standing: ${r.standing.minutes} min — ${r.standing.quality === "held" ? "quality held" : r.standing.quality === "faded" ? "faded near the end" : "degraded, stopped early"}`);
     lines.push(`   Understood what it's for: ${understandWord[r.understood] || r.understood}`);
