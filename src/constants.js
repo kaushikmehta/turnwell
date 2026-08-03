@@ -151,7 +151,7 @@ export const DAY_PLAN = {
   2: { label: "Tuesday · trunk",       ids: ["seated-perturbation", "tram-weight-bearing", "extensor-probe", "seated-reach-limits"] },
   3: { label: "Wednesday · probe day", ids: ["seated-perturbation", "tram-weight-bearing", "extensor-probe", "knee-extension-probe"] },
   4: { label: "Thursday · reach",      ids: ["seated-weight-shift-beat", "tram-weight-bearing", "extensor-probe", "cross-midline-reach"] },
-  5: { label: "Friday · long stand",   ids: ["seated-perturbation", "tram-weight-bearing", "extensor-probe", "sit-to-stand-supported"] },
+  5: { label: "Friday · sit-to-stand", ids: ["seated-perturbation", "tram-weight-bearing", "tram-sit-to-stand", "extensor-probe"] },
   6: { label: "Saturday · caregiver",  ids: ["sitting-tolerance", "real-object-task", "cross-midline-reach"] },
   0: { label: "Sunday · rest day",     ids: [] },
 };

@@ -25,6 +25,8 @@ export function PhysioSetup({ physioBank, start, back }) {
   };
 
   const activeBank = physioBank.filter((ex) => !ex.dormant && !ex.probeOnly);
+  const tramBank = activeBank.filter((ex) => ex.inTram);
+  const otherBank = activeBank.filter((ex) => !ex.inTram);
   const probeBank = physioBank.filter((ex) => !ex.dormant && ex.probeOnly);
   const dormantBank = physioBank.filter((ex) => ex.dormant);
 
@@ -70,6 +72,38 @@ export function PhysioSetup({ physioBank, start, back }) {
     start({ items, firstSession });
   };
 
+  // Shared card for a seeded pick. Probe cards omit the dual-task sub-toggle.
+  const renderPickCard = (ex, { showDualTask = true } = {}) => {
+    const on = isSelected(ex.id);
+    const overLimit = on && selected.findIndex((s) => s.id === ex.id) >= 4;
+    return (
+      <div key={ex.id} style={{ background: overLimit ? "#F6E7E7" : on ? C.clayTint : C.surface,
+        border: `1.5px solid ${overLimit ? "#B15353" : on ? C.clay : C.line}`,
+        borderRadius: 14, padding: "13px 15px" }}>
+        <label className="tw-focus" style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+          <input type="checkbox" checked={on} onChange={() => toggleSeeded(ex)}
+            style={{ width: 18, height: 18, accentColor: C.clay, marginTop: 2, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>
+              {ex.title}
+              {overLimit && <span style={{ fontSize: 11, color: "#8C3A3A", fontWeight: 700, marginLeft: 8 }}>· over the 4-exercise guideline</span>}
+            </div>
+            <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>
+              {ex.instructions.length > 100 ? ex.instructions.slice(0, 100) + "…" : ex.instructions}
+            </div>
+          </div>
+        </label>
+        {showDualTask && on && (
+          <label className="tw-focus" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, paddingLeft: 30, cursor: "pointer" }}>
+            <input type="checkbox" checked={!!dualTask[ex.id]} onChange={() => toggleDualTask(ex.id)}
+              style={{ width: 16, height: 16, accentColor: C.sage }} />
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: C.sageDeep }}>Dual-task this one</span>
+          </label>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="tw-rise">
       <BackBtn onClick={back} />
@@ -102,38 +136,22 @@ export function PhysioSetup({ physioBank, start, back }) {
         <span style={{ fontSize: 12.5, color: C.stone }}>— skips "recall last time" at the opening</span>
       </label>
 
-      <SectionLabel>Exercises</SectionLabel>
+      {tramBank.length > 0 && (
+        <>
+          <SectionLabel>In the TRAM</SectionLabel>
+          <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 10px", lineHeight: 1.45 }}>
+            The plan is to spend more time here as tolerance grows. Sit-to-stand is the build to lean on right now —
+            it makes the whole stand-up pattern repeatable while the harness carries a share of the load.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+            {tramBank.map((ex) => renderPickCard(ex))}
+          </div>
+        </>
+      )}
+
+      <SectionLabel>Seated &amp; other work</SectionLabel>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-        {activeBank.map((ex) => {
-          const on = isSelected(ex.id);
-          const overLimit = on && selected.findIndex((s) => s.id === ex.id) >= 4;
-          return (
-            <div key={ex.id} style={{ background: overLimit ? "#F6E7E7" : on ? C.clayTint : C.surface,
-              border: `1.5px solid ${overLimit ? "#B15353" : on ? C.clay : C.line}`,
-              borderRadius: 14, padding: "13px 15px" }}>
-              <label className="tw-focus" style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
-                <input type="checkbox" checked={on} onChange={() => toggleSeeded(ex)}
-                  style={{ width: 18, height: 18, accentColor: C.clay, marginTop: 2, flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>
-                    {ex.title}
-                    {overLimit && <span style={{ fontSize: 11, color: "#8C3A3A", fontWeight: 700, marginLeft: 8 }}>· over the 4-exercise guideline</span>}
-                  </div>
-                  <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>
-                    {ex.instructions.length > 100 ? ex.instructions.slice(0, 100) + "…" : ex.instructions}
-                  </div>
-                </div>
-              </label>
-              {on && (
-                <label className="tw-focus" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, paddingLeft: 30, cursor: "pointer" }}>
-                  <input type="checkbox" checked={!!dualTask[ex.id]} onChange={() => toggleDualTask(ex.id)}
-                    style={{ width: 16, height: 16, accentColor: C.sage }} />
-                  <span style={{ fontSize: 12.5, fontWeight: 600, color: C.sageDeep }}>Dual-task this one</span>
-                </label>
-              )}
-            </div>
-          );
-        })}
+        {otherBank.map((ex) => renderPickCard(ex))}
 
         {selected.filter((s) => s.kind === "custom").map((ex) => {
           const overLimit = selected.findIndex((s) => s.id === ex.id) >= 4;
@@ -163,29 +181,7 @@ export function PhysioSetup({ physioBank, start, back }) {
         <>
           <SectionLabel>Weekly probes — measurement, not training</SectionLabel>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-            {probeBank.map((ex) => {
-              const on = isSelected(ex.id);
-              const overLimit = on && selected.findIndex((s) => s.id === ex.id) >= 4;
-              return (
-                <div key={ex.id} style={{ background: overLimit ? "#F6E7E7" : on ? C.clayTint : C.surface,
-                  border: `1.5px solid ${overLimit ? "#B15353" : on ? C.clay : C.line}`,
-                  borderRadius: 14, padding: "13px 15px" }}>
-                  <label className="tw-focus" style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
-                    <input type="checkbox" checked={on} onChange={() => toggleSeeded(ex)}
-                      style={{ width: 18, height: 18, accentColor: C.clay, marginTop: 2, flexShrink: 0 }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: C.ink }}>
-                        {ex.title}
-                        {overLimit && <span style={{ fontSize: 11, color: "#8C3A3A", fontWeight: 700, marginLeft: 8 }}>· over the 4-exercise guideline</span>}
-                      </div>
-                      <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>
-                        {ex.instructions.length > 100 ? ex.instructions.slice(0, 100) + "…" : ex.instructions}
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              );
-            })}
+            {probeBank.map((ex) => renderPickCard(ex, { showDualTask: false }))}
           </div>
         </>
       )}
