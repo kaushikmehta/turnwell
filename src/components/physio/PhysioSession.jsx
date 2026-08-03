@@ -47,7 +47,7 @@ export function PhysioSession({ config, home }) {
   const endEarly = () => setPhase("closing");
 
   const session = {
-    at: Date.now(), items, firstSession: config.firstSession, priming,
+    at: Date.now(), items, firstSession: config.firstSession, readiness: config.readiness, priming,
     star, before, recall, after: closingData ? closingData.after : null,
     results, closing: closingData,
   };

@@ -4,7 +4,7 @@
  * written to be read by a human (the coordinator, later you), not parsed by a script.
  */
 import { ratingByKey, supportWord, isDeck, isScene } from "./utils";
-import { READING_RATINGS, RECALL_RATINGS, unitLabel } from "./constants";
+import { READING_RATINGS, RECALL_RATINGS, READINESS_STEPS, ROM_SEGMENTS, unitLabel } from "./constants";
 
 const understandWord = { yes: "yes", partly: "partly", no: "no" };
 
@@ -108,7 +108,7 @@ const ankleWord = {
 const recallWord = Object.fromEntries(RECALL_RATINGS.map((r) => [r.key, r.label.toLowerCase()]));
 
 export function buildPhysioReport(session, patientName = "Akki") {
-  const { items, results, star, before, after, closing, priming, recall } = session;
+  const { items, results, star, before, after, closing, priming, recall, readiness } = session;
   const dt = new Date(session.at || Date.now());
   const dateStr = dt.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const timeStr = dt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
@@ -140,9 +140,21 @@ export function buildPhysioReport(session, patientName = "Akki") {
     lines.push("");
   }
 
+  if (readiness) {
+    const done = READINESS_STEPS.filter((s) => readiness.steps && readiness.steps[s.key]).map((s) => s.title.toLowerCase());
+    lines.push(`Warm-up: ${done.length ? done.join(", ") : "none logged"}.` +
+      (readiness.alertness != null ? ` Alertness ${readiness.alertness}/10.` : ""));
+    lines.push("");
+  }
+
   if (priming) {
-    lines.push(`Priming: ankle ${ankleWord[priming.ankle] || priming.ankle}.` +
-      (priming.alertness ? ` Alertness ${priming.alertness}/10.` : "") +
+    if (priming.rom) {
+      const covered = ROM_SEGMENTS.filter((s) => priming.rom.segments && priming.rom.segments[s.key]).map((s) => s.title.toLowerCase());
+      const missed = ROM_SEGMENTS.filter((s) => !(priming.rom.segments && priming.rom.segments[s.key])).map((s) => s.title.toLowerCase());
+      lines.push(`ROM covered: ${covered.length ? covered.join(", ") : "none"}${missed.length ? ` (not done: ${missed.join(", ")})` : ""}.`);
+      if (priming.rom.tight) lines.push(`   Tight/restricted today: ${priming.rom.tight}`);
+    }
+    lines.push(`Ankle ${ankleWord[priming.ankle] || priming.ankle}.` +
       (priming.splint ? ` Splint worn ${priming.splint.hours}h, skin ${priming.splint.skinClear === false ? "NOT clear — needs refitting" : "clear"}.` : ""));
     if (priming.ankle === "lost") lines.push(`   ** Ankle range flagged — contracture here blocks standing. **`);
     lines.push("");

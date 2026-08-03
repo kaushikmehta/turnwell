@@ -88,12 +88,27 @@ export const INVOLVEMENT = [
 /* Gate rule shown in the app so nobody progresses on a single good day. */
 export const GATE_RULE = "Progress standing time or reduce support only after a 3 appears and repeats across sessions. One good moment is noise.";
 
-/* Block A — priming. Runs before the cognitive opening. */
-export const PRIMING_STEPS = [
-  { key: "rom",     title: "Full-body ROM",        note: "Slow and sustained — this is tissue work. Ankle dorsiflexion to neutral is the priority." },
-  { key: "loaded",  title: "Sitting, feet loaded", note: "Feet flat and firmly on the floor, not dangling. Pressure through the soles is the trigger." },
-  { key: "arm",     title: "Right-arm resisted",   note: "3–4 min diagonal push/pull to a rhythm. Wakes the whole motor system (irradiation)." },
-  { key: "alert",   title: "Arousal check",        note: "Is he actually alert? A session on a drowsy brain teaches nothing." },
+/* Warm-up & readiness — the prep tasks. Set up on the session-setup screen
+   rather than run live: get him loaded through the feet, wake the motor
+   system, and confirm he's actually alert before anything starts. */
+export const READINESS_STEPS = [
+  { key: "loaded", title: "Sitting, feet loaded", note: "Feet flat and firmly on the floor, not dangling. Pressure through the soles is the trigger." },
+  { key: "arm",    title: "Right-arm resisted",   note: "3–4 min diagonal push/pull to a rhythm. Wakes the whole motor system (irradiation)." },
+  { key: "alert",  title: "Arousal check",        note: "Is he actually alert? A session on a drowsy brain teaches nothing." },
+];
+
+/* Block A — priming, run live right before the opening. Full-body ROM broken
+   into segments so each can be worked and logged; ankle dorsiflexion to
+   neutral is the priority, since losing it ends the standing goal. Slow and
+   sustained throughout — this is tissue work, not a warm-up rush. */
+export const ROM_SEGMENTS = [
+  { key: "ankles",    title: "Ankles",         note: "Dorsiflexion to neutral — the priority. Slow, sustained hold.", priority: true },
+  { key: "knees",     title: "Knees",          note: "Full flexion and extension." },
+  { key: "hips",      title: "Hips",           note: "Flexion, abduction, and gentle rotation." },
+  { key: "trunk",     title: "Trunk",          note: "Side flexion and rotation, both directions." },
+  { key: "shoulders", title: "Shoulders",      note: "Flexion and external rotation — the right especially." },
+  { key: "hands",     title: "Wrists & hands", note: "Open the hand, extend the wrist and fingers." },
+  { key: "neck",      title: "Neck",           note: "Gentle rotation and side flexion." },
 ];
 
 /* Quick stretch — the neural one. Distinct from the ROM above.

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { C, MINUTES_PER_EXERCISE, DAY_PLAN, previousTrainingDay } from "../constants";
+import { C, MINUTES_PER_EXERCISE, DAY_PLAN, READINESS_STEPS, previousTrainingDay } from "../constants";
 import { BackBtn, SectionLabel, Field, inputStyle } from "./shared";
 
 let customIdSeq = 0;
@@ -20,6 +20,10 @@ export function PhysioSetup({ physioBank, start, back }) {
       : []
   );
   const [recallAdding, setRecallAdding] = useState("");
+  // Warm-up & readiness — the prep tasks, moved off the live priming screen.
+  const [readinessDone, setReadinessDone] = useState({});
+  const [alertness, setAlertness] = useState("");
+  const toggleReadiness = (k) => setReadinessDone((d) => ({ ...d, [k]: !d[k] }));
   const recallAddable = physioBank.filter((ex) => !ex.dormant && !recallRef.some((e) => e.id === ex.id));
   const removeRecall = (id) => setRecallRef(recallRef.filter((e) => e.id !== id));
   const addRecall = (id) => {
@@ -88,7 +92,8 @@ export function PhysioSetup({ physioBank, start, back }) {
     const recallReference = firstSession
       ? null
       : { reference: recallRef, dayLabel: prevDay ? prevDay.label : null, daysAgo: prevDay ? prevDay.daysAgo : null };
-    start({ items, firstSession, recallRef: recallReference });
+    const readiness = { steps: readinessDone, alertness: alertness === "" ? null : Number(alertness) };
+    start({ items, firstSession, recallRef: recallReference, readiness });
   };
 
   // Shared card for a seeded pick. Probe cards omit the dual-task sub-toggle.
@@ -314,6 +319,38 @@ export function PhysioSetup({ physioBank, start, back }) {
           </div>
         </>
       )}
+
+      <SectionLabel>Warm-up &amp; readiness</SectionLabel>
+      <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 10px", lineHeight: 1.45 }}>
+        Get these done before you begin — full-body ROM itself runs live on the next screen.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+        {READINESS_STEPS.map((s) => {
+          const on = !!readinessDone[s.key];
+          return (
+            <button key={s.key} className="tw-focus" onClick={() => toggleReadiness(s.key)}
+              style={{ textAlign: "left", display: "flex", gap: 12, alignItems: "flex-start",
+                background: on ? C.sageTint : C.surface, border: `1.5px solid ${on ? C.sage : C.line}`,
+                borderRadius: 14, padding: "12px 14px", width: "100%" }}>
+              <span style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                border: `2px solid ${on ? C.sageDeep : C.line}`, background: on ? C.sageDeep : "transparent",
+                color: "#fff", fontSize: 13, fontWeight: 800, lineHeight: "17px", textAlign: "center" }}>
+                {on ? "✓" : ""}
+              </span>
+              <span style={{ flex: 1 }}>
+                <span style={{ display: "block", fontSize: 14.5, fontWeight: 700, color: C.ink }}>{s.title}</span>
+                <span style={{ display: "block", fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>{s.note}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 14, padding: "13px 15px", marginBottom: 20 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 6 }}>Alertness right now (1–10, optional)</div>
+        <input type="number" min={1} max={10} value={alertness} onChange={(e) => setAlertness(e.target.value)}
+          className="tw-focus" style={{ width: "100%", background: "#fff", border: `1px solid ${C.line}`,
+            borderRadius: 10, padding: "10px 12px", fontSize: 15, color: C.ink }} />
+      </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
         background: overTarget ? C.clayTint : C.sageTint, borderRadius: 12, padding: "10px 14px", marginBottom: 20 }}>

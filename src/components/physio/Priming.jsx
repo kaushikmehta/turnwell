@@ -1,88 +1,105 @@
 import React, { useState } from "react";
-import { C, PRIMING_STEPS } from "../../constants";
+import { C, ROM_SEGMENTS } from "../../constants";
 import { SectionLabel } from "../shared";
 import { Metronome } from "./Metronome";
 
-/* Block A — priming.
-   Purpose: start the working block already warm, already loaded, already awake.
-   PT-led for now; hands over to the attendants once they're trained.
-
-   The ankle question is the one that matters most. If dorsiflexion is lost,
-   standing becomes mechanically impossible regardless of neural progress —
-   so it gets asked out loud, every session, and lands in the report. */
+/* Block A — priming, now focused on full-body ROM (the live, hands-on tissue
+   work). The warm-up/readiness prep moved to session setup. What stays here is
+   what has to happen at the body, right before the working block: move every
+   segment, and settle the two things that gate the standing goal — ankle
+   dorsiflexion range, and overnight splint tolerance. */
 export function Priming({ onNext }) {
-  const [done, setDone] = useState({});
+  const [romDone, setRomDone] = useState({});
+  const [tight, setTight] = useState("");
   const [ankle, setAnkle] = useState(null);
-  const [alertness, setAlertness] = useState("");
   const [splintHours, setSplintHours] = useState("");
   const [skinClear, setSkinClear] = useState(null);
 
-  const toggle = (k) => setDone((d) => ({ ...d, [k]: !d[k] }));
-  const allDone = PRIMING_STEPS.every((s) => done[s.key]);
-  const canContinue = allDone && ankle != null;
+  const toggleSeg = (k) => setRomDone((d) => ({ ...d, [k]: !d[k] }));
+  const doneCount = ROM_SEGMENTS.filter((s) => romDone[s.key]).length;
+  const canContinue = ankle != null;
 
   const submit = () => onNext({
-    steps: done,
+    rom: { segments: romDone, tight: tight.trim() },
     ankle,
-    alertness: alertness === "" ? null : Number(alertness),
     splint: splintHours === "" ? null : { hours: Number(splintHours), skinClear },
   });
 
   return (
     <div className="tw-rise">
       <SectionLabel>Block A · Priming</SectionLabel>
-      <h2 className="tw-serif" style={{ fontSize: 26, margin: "0 0 6px" }}>Prime before you begin</h2>
+      <h2 className="tw-serif" style={{ fontSize: 26, margin: "0 0 6px" }}>Full-body ROM</h2>
       <p style={{ color: C.inkSoft, margin: "0 0 20px", fontSize: 14.5, lineHeight: 1.45 }}>
-        Twenty minutes here buys a better forty-five minutes after it.
+        Slow and sustained — this is tissue work, not a warm-up rush. Work each segment and tick it off; note anything tight.
       </p>
 
       <Metronome />
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 18 }}>
-        {PRIMING_STEPS.map((s) => {
-          const on = !!done[s.key];
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 9 }}>
+        <SectionLabel>Segments</SectionLabel>
+        <span style={{ fontSize: 12, color: C.stone, fontWeight: 600 }}>{doneCount}/{ROM_SEGMENTS.length} worked</span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
+        {ROM_SEGMENTS.map((s) => {
+          const on = !!romDone[s.key];
           return (
-            <button key={s.key} className="tw-focus" onClick={() => toggle(s.key)}
-              style={{ textAlign: "left", display: "flex", gap: 12, alignItems: "flex-start",
-                background: on ? C.sageTint : C.surface, border: `1.5px solid ${on ? C.sage : C.line}`,
-                borderRadius: 14, padding: "13px 15px", width: "100%" }}>
-              <span style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
-                border: `2px solid ${on ? C.sageDeep : C.line}`, background: on ? C.sageDeep : "transparent",
-                color: "#fff", fontSize: 13, fontWeight: 800, lineHeight: "17px", textAlign: "center" }}>
-                {on ? "✓" : ""}
-              </span>
-              <span style={{ flex: 1 }}>
-                <span style={{ display: "block", fontSize: 15, fontWeight: 700, color: C.ink }}>{s.title}</span>
-                <span style={{ display: "block", fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>{s.note}</span>
-              </span>
-            </button>
+            <React.Fragment key={s.key}>
+              <button className="tw-focus" onClick={() => toggleSeg(s.key)}
+                style={{ textAlign: "left", display: "flex", gap: 12, alignItems: "flex-start",
+                  background: on ? C.sageTint : C.surface, border: `1.5px solid ${on ? C.sage : s.priority ? C.clay : C.line}`,
+                  borderRadius: 14, padding: "13px 15px", width: "100%" }}>
+                <span style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                  border: `2px solid ${on ? C.sageDeep : C.line}`, background: on ? C.sageDeep : "transparent",
+                  color: "#fff", fontSize: 13, fontWeight: 800, lineHeight: "17px", textAlign: "center" }}>
+                  {on ? "✓" : ""}
+                </span>
+                <span style={{ flex: 1 }}>
+                  <span style={{ display: "block", fontSize: 15, fontWeight: 700, color: C.ink }}>
+                    {s.title}
+                    {s.priority && <span style={{ fontSize: 11, color: C.clayDeep, fontWeight: 700, marginLeft: 8 }}>· priority</span>}
+                  </span>
+                  <span style={{ display: "block", fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>{s.note}</span>
+                </span>
+              </button>
+
+              {/* Ankle dorsiflexion range — sits directly under the ankle ROM segment it measures. */}
+              {s.key === "ankles" && (
+                <div style={{ background: C.clayTint, border: `1px solid ${C.clay}55`, borderRadius: 14, padding: "14px 16px", marginLeft: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.clayDeep, marginBottom: 5 }}>Ankle dorsiflexion — reaches neutral?</div>
+                  <p style={{ fontSize: 13, color: C.ink, margin: "0 0 11px", lineHeight: 1.4 }}>
+                    Does it reach neutral (90°)? If this is lost, standing is off the table — everything else is moot.
+                  </p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {[["neutral", "Reaches neutral"], ["tight", "Tight, short of it"], ["lost", "Not close"]].map(([v, label]) => (
+                      <button key={v} className="tw-focus" onClick={() => setAnkle(v)}
+                        style={{ flex: 1, border: `1.5px solid ${ankle === v ? C.clayDeep : C.line}`,
+                          background: ankle === v ? "#fff" : C.surface, color: ankle === v ? C.clayDeep : C.inkSoft,
+                          borderRadius: 12, padding: "11px 8px", fontSize: 13, fontWeight: 700, lineHeight: 1.25 }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {ankle === "lost" && (
+                    <p className="tw-rise" style={{ fontSize: 12.5, color: C.clayDeep, margin: "11px 0 0", fontWeight: 600, lineHeight: 1.4 }}>
+                      Flag this to the PT today. Contracture here ends the standing goal — it needs addressing before more loading work.
+                    </p>
+                  )}
+                </div>
+              )}
+            </React.Fragment>
           );
         })}
       </div>
 
-      <div style={{ background: C.clayTint, border: `1px solid ${C.clay}55`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.clayDeep, marginBottom: 5 }}>Ankle dorsiflexion</div>
-        <p style={{ fontSize: 13.5, color: C.ink, margin: "0 0 11px", lineHeight: 1.4 }}>
-          Does the ankle reach neutral (90°)? If this is lost, standing is off the table — everything else is moot.
-        </p>
-        <div style={{ display: "flex", gap: 8 }}>
-          {[["neutral", "Reaches neutral"], ["tight", "Tight, short of it"], ["lost", "Not close"]].map(([v, label]) => (
-            <button key={v} className="tw-focus" onClick={() => setAnkle(v)}
-              style={{ flex: 1, border: `1.5px solid ${ankle === v ? C.clayDeep : C.line}`,
-                background: ankle === v ? "#fff" : C.surface, color: ankle === v ? C.clayDeep : C.inkSoft,
-                borderRadius: 12, padding: "11px 8px", fontSize: 13, fontWeight: 700, lineHeight: 1.25 }}>
-              {label}
-            </button>
-          ))}
-        </div>
-        {ankle === "lost" && (
-          <p className="tw-rise" style={{ fontSize: 12.5, color: C.clayDeep, margin: "11px 0 0", fontWeight: 600, lineHeight: 1.4 }}>
-            Flag this to the PT today. Contracture here ends the standing goal — it needs addressing before more loading work.
-          </p>
-        )}
+      <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 7 }}>Anything tight or restricted today? (optional)</div>
+        <textarea value={tight} onChange={(e) => setTight(e.target.value)} rows={2}
+          placeholder="e.g. right shoulder short of full external rotation; hamstrings tight both sides"
+          className="tw-focus" style={{ width: "100%", background: "#fff", border: `1px solid ${C.line}`,
+            borderRadius: 10, padding: "10px 12px", fontSize: 14, color: C.ink, resize: "vertical", lineHeight: 1.4 }} />
       </div>
 
-      <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
+      <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 22 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 9 }}>Overnight splint (optional)</div>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
           <div style={{ flex: 1 }}>
@@ -113,18 +130,11 @@ export function Priming({ onNext }) {
         )}
       </div>
 
-      <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 22 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 5 }}>Alertness right now (1–10, optional)</div>
-        <input type="number" min={1} max={10} value={alertness} onChange={(e) => setAlertness(e.target.value)}
-          className="tw-focus" style={{ width: "100%", background: "#fff", border: `1px solid ${C.line}`,
-            borderRadius: 10, padding: "10px 12px", fontSize: 15, color: C.ink }} />
-      </div>
-
       <button className="tw-focus tw-lift" disabled={!canContinue} onClick={submit}
         style={{ width: "100%", background: canContinue ? C.clay : C.line, color: canContinue ? "#fff" : C.inkSoft,
           border: "none", borderRadius: 16, padding: "17px", fontSize: 17, fontWeight: 700,
           boxShadow: canContinue ? `0 3px 0 ${C.clayDeep}` : "none" }}>
-        {canContinue ? "Primed · go to opening" : "Work through priming to continue"}
+        {canContinue ? "Primed · go to opening" : "Answer the ankle check to continue"}
       </button>
     </div>
   );
