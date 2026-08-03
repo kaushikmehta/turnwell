@@ -189,7 +189,10 @@ export function buildPhysioReport(session, patientName = "Akki") {
     }
     lines.push(`   INVOLVEMENT: ${involveWord[r.involvement] ?? r.involvement}`);
     if (r.standing) lines.push(`   Standing: ${r.standing.minutes} min — ${r.standing.quality === "held" ? "quality held" : r.standing.quality === "faded" ? "faded near the end" : "degraded, stopped early"}`);
-    lines.push(`   Understood what it's for: ${understandWord[r.understood] || r.understood}`);
+    if (r.namedExercise != null) lines.push(`   Named the exercise: ${understandWord[r.namedExercise] || r.namedExercise}`);
+    if (r.namedResponse) lines.push(`      He said: "${r.namedResponse}"`);
+    if (r.understood != null) lines.push(`   Said what it helps with (daily living): ${understandWord[r.understood] || r.understood}`);
+    if (r.helpsResponse) lines.push(`      He said: "${r.helpsResponse}"`);
     lines.push(`   Dual-task: ${r.dualTask ? "yes" : "no"}${r.quickStretched ? " · quick-stretched first" : ""}`);
     lines.push("");
   });
@@ -197,12 +200,20 @@ export function buildPhysioReport(session, patientName = "Akki") {
   const green = results.filter((r) => r.tick === "green").length;
   const yellow = results.length - green;
   const understandCounts = { yes: 0, partly: 0, no: 0 };
-  results.forEach((r) => { understandCounts[r.understood] = (understandCounts[r.understood] || 0) + 1; });
+  const namedCounts = { yes: 0, partly: 0, no: 0 };
+  let awarenessAsked = 0;
+  results.forEach((r) => {
+    if (r.understood != null) understandCounts[r.understood] += 1;
+    if (r.namedExercise != null) { namedCounts[r.namedExercise] += 1; awarenessAsked += 1; }
+  });
 
   lines.push(
     `Summary: ${results.length} exercises. Difficulty predictions matched on ${green} (green) and missed on ${yellow} (yellow) — ` +
-    `this tracks his metacognition, not pass/fail. He explained what the exercise was for correctly on ${understandCounts.yes}, ` +
-    `partly on ${understandCounts.partly}, and not at all on ${understandCounts.no}.`
+    `this tracks his metacognition, not pass/fail.` +
+    (awarenessAsked
+      ? ` He named the exercise correctly on ${namedCounts.yes}, partly on ${namedCounts.partly}, and not at all on ${namedCounts.no}.` +
+        ` He explained what it was for (daily living) correctly on ${understandCounts.yes}, partly on ${understandCounts.partly}, and not at all on ${understandCounts.no}.`
+      : "")
   );
 
   const scored = results.filter((r) => typeof r.involvement === "number");

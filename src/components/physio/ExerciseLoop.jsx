@@ -37,6 +37,29 @@ function InvolvementPicker({ value, onChange }) {
   );
 }
 
+/* Yes / Partly / No plus his verbatim answer — his awareness of the exercise,
+   captured after each one. The score rates it; the text keeps what he said. */
+function AwarenessPicker({ label, value, onChange, response, onResponse, placeholder }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, marginBottom: 8 }}>{label}</div>
+      <div style={{ display: "flex", gap: 8 }}>
+        {[["yes", "Yes"], ["partly", "Partly"], ["no", "No"]].map(([v, l]) => (
+          <button key={v} className="tw-focus" onClick={() => onChange(v)}
+            style={{ flex: 1, border: `1.5px solid ${value === v ? C.clay : C.line}`,
+              background: value === v ? C.clayTint : C.surface, color: value === v ? C.clayDeep : C.inkSoft,
+              borderRadius: 12, padding: "12px 10px", fontSize: 14, fontWeight: 700 }}>
+            {l}
+          </button>
+        ))}
+      </div>
+      <input value={response} onChange={(e) => onResponse(e.target.value)} placeholder={placeholder}
+        className="tw-focus" style={{ marginTop: 8, width: "100%", background: "#fff", border: `1px solid ${C.line}`,
+          borderRadius: 10, padding: "10px 12px", fontSize: 14, color: C.ink }} />
+    </div>
+  );
+}
+
 export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarly }) {
   const [stage, setStage] = useState("work"); // work | capture
   const [stopped, setStopped] = useState(false);
@@ -44,7 +67,10 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
   const [suggestion] = useState(() => DUAL_TASK_SUGGESTIONS[index % DUAL_TASK_SUGGESTIONS.length]);
   const [actReps, setActReps] = useState("");
   const [actDiff, setActDiff] = useState("");
-  const [understood, setUnderstood] = useState(null);
+  const [namedExercise, setNamedExercise] = useState(null); // could he name the exercise?
+  const [namedResponse, setNamedResponse] = useState("");   // what he actually said it was
+  const [understood, setUnderstood] = useState(null);       // could he say what it helps with (ADL)?
+  const [helpsResponse, setHelpsResponse] = useState("");   // what he actually said it helps with
   const [involvement, setInvolvement] = useState(null);
   const [standingMin, setStandingMin] = useState("");
   const [standingQuality, setStandingQuality] = useState(null);
@@ -54,7 +80,7 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
 
   const standing = !!item.isStanding;
   const canSave = actReps !== "" && actDiff !== "" && est.estReps !== "" && est.estDiff !== ""
-    && understood != null && involvement != null
+    && involvement != null
     && (!standing || (standingMin !== "" && standingQuality != null));
 
   const save = () => {
@@ -68,7 +94,8 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
       estRevised: revised,
       estOriginal: revised ? { estReps: estimate.estReps, estDiff: estimate.estDiff } : null,
       actReps: Number(actReps), actDiff: Number(actDiff),
-      tick, understood, dualTask: !!item.dualTask,
+      tick, namedExercise, namedResponse: namedResponse.trim(), understood, helpsResponse: helpsResponse.trim(),
+      dualTask: !!item.dualTask,
       involvement,
       quickStretched: stretched,
       standing: standing ? { minutes: Number(standingMin), quality: standingQuality } : null,
@@ -196,12 +223,23 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
             style={{ width: "100%", background: stopped ? C.clayDeep : C.clay, color: "#fff", border: "none",
               borderRadius: 14, padding: "16px", fontSize: 15.5, fontWeight: 700, marginBottom: 12,
               boxShadow: `0 3px 0 ${C.clayDeep}` }}>
-            {stopped ? "Resume" : "STOP — ask what this is helping with"}
+            {stopped ? "Resume" : "STOP — ask him about this exercise"}
           </button>
 
           {stopped && (
-            <div className="tw-rise" style={{ background: C.clayDeep, color: "#fff", borderRadius: 16, padding: "20px 22px", marginBottom: 16, textAlign: "center" }}>
-              <p className="tw-serif" style={{ fontSize: 20, margin: 0, lineHeight: 1.35 }}>What is this exercise helping you with, Akki?</p>
+            <div className="tw-rise" style={{ border: `2px solid ${C.clayDeep}`, borderRadius: 16, marginBottom: 16, overflow: "hidden" }}>
+              <div style={{ background: C.clayDeep, color: "#fff", padding: "14px 18px" }}>
+                <p style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", opacity: .85, margin: "0 0 5px" }}>Stop — ask Akki, capture what he says</p>
+                <p className="tw-serif" style={{ fontSize: 16, margin: 0, lineHeight: 1.3 }}>Pause the exercise and ask him these two.</p>
+              </div>
+              <div style={{ background: C.surface, padding: "16px 18px" }}>
+                <AwarenessPicker label="1. Can you tell me what exercise we're working on?"
+                  value={namedExercise} onChange={setNamedExercise}
+                  response={namedResponse} onResponse={setNamedResponse} placeholder="What Akki said it was" />
+                <AwarenessPicker label="2. What is this exercise helping you with — in everyday life?"
+                  value={understood} onChange={setUnderstood}
+                  response={helpsResponse} onResponse={setHelpsResponse} placeholder="What Akki said it helps with" />
+              </div>
             </div>
           )}
 
@@ -259,22 +297,8 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
             </div>
           )}
 
-          <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 22 }}>
             <InvolvementPicker value={involvement} onChange={setInvolvement} />
-          </div>
-
-          <div style={{ marginBottom: 22 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, marginBottom: 8 }}>Did he correctly say what this exercise helps with?</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[["yes", "Yes"], ["partly", "Partly"], ["no", "No"]].map(([v, label]) => (
-                <button key={v} className="tw-focus" onClick={() => setUnderstood(v)}
-                  style={{ flex: 1, border: `1.5px solid ${understood === v ? C.clay : C.line}`,
-                    background: understood === v ? C.clayTint : C.surface, color: understood === v ? C.clayDeep : C.inkSoft,
-                    borderRadius: 12, padding: "12px 10px", fontSize: 14, fontWeight: 700 }}>
-                  {label}
-                </button>
-              ))}
-            </div>
           </div>
 
           <button className="tw-focus tw-lift" disabled={!canSave} onClick={save}
