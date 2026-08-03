@@ -1,16 +1,7 @@
 import React, { useState } from "react";
-import { C, RECALL_RATINGS } from "../../constants";
+import { C, RECALL_RATINGS, emptyStateRatings, compactStateRatings } from "../../constants";
 import { SectionLabel } from "../shared";
-
-function RatingInput({ label, value, onChange }) {
-  return (
-    <div style={{ flex: 1 }}>
-      <div style={{ fontSize: 12.5, color: C.inkSoft, marginBottom: 5 }}>{label}</div>
-      <input type="number" min={1} max={10} value={value} onChange={(e) => onChange(e.target.value)}
-        className="tw-focus" style={{ width: "100%", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 10, padding: "10px 12px", fontSize: 15, color: C.ink }} />
-    </div>
-  );
-}
+import { StateRatings } from "./StateRatings";
 
 /* The recall step. The reference list was confirmed at setup — here it's only
    asked and scored, live, on the cue ladder. The middle rung (a category cue)
@@ -57,7 +48,7 @@ function Recall({ refDay, entries, setScore }) {
 
 export function Opening({ items, firstSession, recallRef, onNext }) {
   const [starId, setStarId] = useState(null);
-  const [before, setBefore] = useState({ tired: "", mood: "", satisfaction: "" });
+  const [before, setBefore] = useState(emptyStateRatings);
 
   const hasRecall = !firstSession && recallRef && recallRef.reference && recallRef.reference.length > 0;
   const [recallEntries, setRecallEntries] = useState(() =>
@@ -70,9 +61,7 @@ export function Opening({ items, firstSession, recallRef, onNext }) {
 
   const submit = () => {
     const star = items.find((i) => i.id === starId);
-    const b = before.tired || before.mood || before.satisfaction
-      ? { tired: before.tired || "—", mood: before.mood || "—", satisfaction: before.satisfaction || "—" }
-      : null;
+    const b = compactStateRatings(before);
     let recall = null;
     if (hasRecall) {
       const recalled = recallEntries.filter((e) => e.score === "own" || e.score === "cue").length;
@@ -117,12 +106,8 @@ export function Opening({ items, firstSession, recallRef, onNext }) {
       </div>
 
       <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 22 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 8 }}>4. Before-session state (optional)</div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <RatingInput label="Tiredness" value={before.tired} onChange={(v) => setBefore({ ...before, tired: v })} />
-          <RatingInput label="Mood" value={before.mood} onChange={(v) => setBefore({ ...before, mood: v })} />
-          <RatingInput label="Satisfaction" value={before.satisfaction} onChange={(v) => setBefore({ ...before, satisfaction: v })} />
-        </div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 10 }}>4. Before-session state (optional)</div>
+        <StateRatings value={before} onChange={setBefore} />
       </div>
 
       <button className="tw-focus tw-lift" disabled={!canContinue} onClick={submit}

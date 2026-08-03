@@ -4,7 +4,7 @@
  * written to be read by a human (the coordinator, later you), not parsed by a script.
  */
 import { ratingByKey, supportWord, isDeck, isScene } from "./utils";
-import { READING_RATINGS, RECALL_RATINGS, READINESS_STEPS, ROM_SEGMENTS, unitLabel } from "./constants";
+import { READING_RATINGS, RECALL_RATINGS, READINESS_STEPS, ROM_SEGMENTS, STATE_METRICS, unitLabel } from "./constants";
 
 const understandWord = { yes: "yes", partly: "partly", no: "no" };
 
@@ -119,13 +119,18 @@ export function buildPhysioReport(session, patientName = "Akki") {
   lines.push("");
 
   if (before || after) {
-    if (before && after) {
-      lines.push(`State: tiredness went from ${before.tired} to ${after.tired}, mood from ${before.mood} to ${after.mood} (before → after, out of 10).`);
-    } else if (before) {
-      lines.push(`Before the session: tiredness ${before.tired}/10, mood ${before.mood}/10.`);
-    } else {
-      lines.push(`After the session: tiredness ${after.tired}/10, mood ${after.mood}/10.`);
-    }
+    const pair = (state, key) => (state && state[key] ? `${state[key].patient}/${state[key].facilitator}` : null);
+    lines.push(`State (Akki / you, out of 10):`);
+    STATE_METRICS.forEach((m) => {
+      const b = pair(before, m.key);
+      const a = pair(after, m.key);
+      let val;
+      if (b && a) val = `${b} before → ${a} after`;
+      else if (b) val = `${b} (before)`;
+      else if (a) val = `${a} (after)`;
+      else return;
+      lines.push(`  ${m.label}: ${val}`);
+    });
     lines.push("");
   }
 

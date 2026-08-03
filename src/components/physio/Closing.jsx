@@ -1,22 +1,13 @@
 import React, { useState } from "react";
-import { C, FADE_PROBE_NOTE, FADE_OUTCOMES } from "../../constants";
+import { C, FADE_PROBE_NOTE, FADE_OUTCOMES, emptyStateRatings, compactStateRatings } from "../../constants";
 import { SectionLabel, inputStyle } from "../shared";
-
-function RatingInput({ label, value, onChange }) {
-  return (
-    <div style={{ flex: 1 }}>
-      <div style={{ fontSize: 12.5, color: C.inkSoft, marginBottom: 5 }}>{label}</div>
-      <input type="number" min={1} max={10} value={value} onChange={(e) => onChange(e.target.value)}
-        className="tw-focus" style={{ width: "100%", background: "#fff", border: `1px solid ${C.line}`, borderRadius: 10, padding: "10px 12px", fontSize: 15, color: C.ink }} />
-    </div>
-  );
-}
+import { StateRatings } from "./StateRatings";
 
 export function Closing({ items, star, onNext }) {
   const [starRecalledId, setStarRecalledId] = useState(null);
   const [favouriteId, setFavouriteId] = useState(null);
   const [favouriteWhy, setFavouriteWhy] = useState("");
-  const [after, setAfter] = useState({ tired: "", mood: "", satisfaction: "" });
+  const [after, setAfter] = useState(emptyStateRatings);
   const [notes, setNotes] = useState("");
   const [fade, setFade] = useState(null);
   const [fadeWhat, setFadeWhat] = useState("");
@@ -26,9 +17,7 @@ export function Closing({ items, star, onNext }) {
   const submit = () => {
     const recalled = items.find((i) => i.id === starRecalledId);
     const fav = items.find((i) => i.id === favouriteId);
-    const a = after.tired || after.mood || after.satisfaction
-      ? { tired: after.tired || "—", mood: after.mood || "—", satisfaction: after.satisfaction || "—" }
-      : null;
+    const a = compactStateRatings(after);
     onNext({
       starRecalledId: recalled.id, starRecalledTitle: recalled.title,
       favouriteId: fav ? fav.id : null, favouriteTitle: fav ? fav.title : null, favouriteWhy: favouriteWhy.trim(),
@@ -86,12 +75,8 @@ export function Closing({ items, star, onNext }) {
       </div>
 
       <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 8 }}>4. After-session state (optional)</div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <RatingInput label="Tiredness" value={after.tired} onChange={(v) => setAfter({ ...after, tired: v })} />
-          <RatingInput label="Mood" value={after.mood} onChange={(v) => setAfter({ ...after, mood: v })} />
-          <RatingInput label="Satisfaction" value={after.satisfaction} onChange={(v) => setAfter({ ...after, satisfaction: v })} />
-        </div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 10 }}>4. After-session state (optional)</div>
+        <StateRatings value={after} onChange={setAfter} />
       </div>
 
       <div style={{ background: C.sageTint, border: `1px solid ${C.sage}44`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>

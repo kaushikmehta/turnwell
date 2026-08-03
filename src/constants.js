@@ -69,6 +69,30 @@ export const RSVP_MIN_WPM = 80;
 export const RSVP_MAX_WPM = 400;
 export const RSVP_STEP_WPM = 20;
 
+/* Before/after session state — captured pre (opening) and post (closing) so
+   the two can be compared, and rated by both the patient (self) and the
+   facilitator (observed) since the two views often diverge. */
+export const STATE_METRICS = [
+  { key: "tired",      label: "Tiredness" },
+  { key: "mood",       label: "Mood" },
+  { key: "motivation", label: "Motivation" },
+];
+export const STATE_RATERS = [
+  { key: "patient",     label: "Akki" },
+  { key: "facilitator", label: "You" },
+];
+export const emptyStateRatings = () =>
+  Object.fromEntries(STATE_METRICS.map((m) => [m.key, { patient: "", facilitator: "" }]));
+export const hasAnyStateRating = (s) =>
+  !!s && STATE_METRICS.some((m) => STATE_RATERS.some((r) => s[m.key] && s[m.key][r.key] !== ""));
+/* Blanks become "—" so a half-filled set still reads cleanly in the report;
+   an entirely empty set collapses to null (the state was skipped). */
+export const compactStateRatings = (s) => {
+  if (!hasAnyStateRating(s)) return null;
+  return Object.fromEntries(STATE_METRICS.map((m) => [m.key,
+    Object.fromEntries(STATE_RATERS.map((r) => [r.key, s[m.key] && s[m.key][r.key] !== "" ? s[m.key][r.key] : "—"]))]));
+};
+
 /* ================================================================
    MOTOR / NEURO LAYER
    Added to carry the ACoA initiation-and-persistence approach:
