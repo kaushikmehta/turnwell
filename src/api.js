@@ -35,3 +35,13 @@ export async function saveSession(getToken, domain, record, patientName = "Akki"
   const data = await res.json();
   return data.session;
 }
+
+// Delete one session by id (owner-scoped server-side).
+export async function deleteSession(getToken, id) {
+  const res = await fetch(`${BASE}/api/sessions/${id}`, {
+    method: "DELETE",
+    headers: await authHeaders(getToken),
+  });
+  if (!res.ok) throw new Error(`DELETE /api/sessions/${id} failed (${res.status})`);
+  return true;
+}

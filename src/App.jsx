@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { fetchSessions, saveSession } from "./api";
+import { fetchSessions, saveSession, deleteSession } from "./api";
 import { loadDraft, saveDraft, clearDraft } from "./draft";
 import { seed, seedPhysioExercises, seedReadingPassages } from "./seed";
 import { Shell } from "./components/Shell";
@@ -31,7 +31,6 @@ export default function App() {
   const [draft, setDraft] = useState(() => loadDraft()); // the saved draft, for Home's Continue card
 
   const saveBank = useCallback((next) => setBank(next), []);
-  const saveSessions = useCallback((next) => setSessions(next), []);
 
   // Direct-link support: #dashboard / #progress / #home open that view (the app
   // is otherwise view-state only, no router). Read-only — reflects the URL into
@@ -99,12 +98,28 @@ export default function App() {
 
   const finishRun = (finished) => {
     const rec = { at: Date.now(), ...finished };
-    saveSessions([rec, ...sessions]);
-    persistSession("speech", rec);
+    setSessions((prev) => [rec, ...prev]);
+    // Save, then stamp the DB id onto the local copy so it's immediately deletable.
+    saveSession(getToken, "speech", rec)
+      .then((saved) => {
+        if (saved?.id) setSessions((prev) => prev.map((s) => (s === rec ? { ...s, id: saved.id } : s)));
+      })
+      .catch((err) => console.error("Failed to save speech session:", err));
     endDraft();
     setRun(rec);
     setView("summary");
   };
+
+  // Delete a session from history: remove locally and from the DB (if persisted).
+  const removeSession = useCallback((session) => {
+    setSessions((prev) => prev.filter((s) => s !== session));
+    if (session.id) deleteSession(getToken, session.id).catch((err) => console.error("Failed to delete session:", err));
+  }, [getToken]);
+
+  const clearSessions = useCallback(() => {
+    sessions.forEach((s) => { if (s.id) deleteSession(getToken, s.id).catch(() => {}); });
+    setSessions([]);
+  }, [getToken, sessions]);
 
   const beginPhysio = (config) => {
     if (!confirmDiscardDraft()) return;
@@ -171,7 +186,7 @@ export default function App() {
         <Library bank={bank} save={saveBank} back={() => setView("home")} />
       )}
       {view === "progress" && (
-        <Progress sessions={sessions} clear={() => saveSessions([])} back={() => setView("home")} />
+        <Progress sessions={sessions} remove={removeSession} clear={clearSessions} back={() => setView("home")} />
       )}
       {view === "dashboard" && (
         <Dashboard back={() => setView("home")} />

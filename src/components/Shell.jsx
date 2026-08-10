@@ -1,4 +1,5 @@
 import React from "react";
+import { UserButton } from "@clerk/clerk-react";
 import { C } from "../constants";
 
 export function Shell({ children, center }) {
@@ -21,7 +22,12 @@ export function Shell({ children, center }) {
         @media (prefers-reduced-motion: reduce) { .tw-rise, .tw-lift { animation: none !important; transition: none !important; } }
         @media (max-width: 600px) { input, textarea, select { font-size: 16px; } }
       `}</style>
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "22px 18px 40px" }}>{children}</div>
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "22px 18px 40px", position: "relative" }}>
+        <div style={{ position: "absolute", top: 18, right: 18, zIndex: 20 }}>
+          <UserButton afterSignOutUrl="/" />
+        </div>
+        {children}
+      </div>
     </div>
   );
 }
