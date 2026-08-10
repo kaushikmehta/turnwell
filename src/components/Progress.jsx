@@ -3,17 +3,17 @@ import { C, RATINGS } from "../constants";
 import { ratingByKey } from "../utils";
 import { BackBtn, Empty } from "./shared";
 
-export function Progress({ sessions, clear, back }) {
+export function Progress({ sessions, remove, clear, back }) {
   return (
     <div className="tw-rise">
       <BackBtn onClick={back} />
-      <h2 className="tw-serif" style={{ fontSize: 28, margin: "12px 0 4px" }}>This run</h2>
+      <h2 className="tw-serif" style={{ fontSize: 28, margin: "12px 0 4px" }}>Speech history</h2>
       <p style={{ color: C.inkSoft, margin: "0 0 22px", fontSize: 15 }}>
-        Sessions from this sitting. Taller bars are more independent. Nothing is stored — send each one to the therapist to keep a record.
+        Saved speech sessions. Taller bars are more independent.
       </p>
 
       {sessions.length === 0 ? (
-        <Empty title="No sessions yet" body="Run a session and it'll show here for this sitting. To keep it, send the report to the therapist at the end." />
+        <Empty title="No sessions yet" body="Run a speech session and it'll be saved here automatically." />
       ) : (
         <>
           <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "20px 18px 14px", marginBottom: 20 }}>
@@ -37,23 +37,30 @@ export function Progress({ sessions, clear, back }) {
             const total = s.results.length;
             const ind = s.results.filter((r) => r.rating === "independent").length;
             return (
-              <div key={i} style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 14, padding: "14px 16px", marginBottom: 10 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={s.id || i} style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 14, padding: "14px 16px", marginBottom: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                   <div>
                     <span style={{ fontSize: 14, fontWeight: 700 }}>{new Date(s.at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span>
                     <span style={{ fontSize: 12, color: C.sage, fontWeight: 600, marginLeft: 8 }}>speech</span>
                   </div>
-                  <span style={{ fontSize: 13, color: C.sage, fontWeight: 700 }}>
-                    {ind}/{total} on their own
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 13, color: C.sage, fontWeight: 700 }}>
+                      {ind}/{total} on their own
+                    </span>
+                    <button className="tw-focus" aria-label="Delete session"
+                      onClick={() => { if (confirm("Delete this session? This can't be undone.")) remove(s); }}
+                      style={{ background: "none", border: "none", color: C.stone, fontSize: 16, lineHeight: 1, padding: 4 }}>
+                      ×
+                    </button>
+                  </div>
                 </div>
                 {s.notes && <p style={{ fontSize: 13, color: C.inkSoft, margin: "8px 0 0", lineHeight: 1.4 }}>{s.notes}</p>}
               </div>
             );
           })}
-          <button className="tw-focus" onClick={() => { if (confirm("Clear this run's sessions?")) clear(); }}
+          <button className="tw-focus" onClick={() => { if (confirm(`Delete all ${sessions.length} saved speech sessions? This can't be undone.`)) clear(); }}
             style={{ marginTop: 14, background: "none", border: "none", color: C.stone, fontSize: 13, fontWeight: 600 }}>
-            Clear this run
+            Delete all
           </button>
         </>
       )}
