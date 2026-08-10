@@ -4,3 +4,9 @@ dist
 *.log
 # Local folder for images and context ignored
 local
+# Local environment files — never commit real keys. .env.example IS committed.
+.env
+.env.local
+.env.*.local
+# Vercel
+.vercel

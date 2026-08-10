@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { saveDraft, clearDraft } from "../../draft";
 import { Priming } from "./Priming";
 import { Opening } from "./Opening";
 import { Estimates } from "./Estimates";
@@ -6,17 +7,27 @@ import { ExerciseLoop } from "./ExerciseLoop";
 import { Closing } from "./Closing";
 import { PhysioSummary } from "./PhysioSummary";
 
-export function PhysioSession({ config, home }) {
-  const [phase, setPhase] = useState("priming"); // priming | opening | estimates | loop | closing | summary
-  const [priming, setPriming] = useState(null);
-  const [star, setStar] = useState(null);
-  const [before, setBefore] = useState(null);
-  const [recall, setRecall] = useState(null);
-  const [estimates, setEstimates] = useState(null);
-  const [loopIndex, setLoopIndex] = useState(0);
-  const [results, setResults] = useState([]);
-  const [closingData, setClosingData] = useState(null);
+export function PhysioSession({ config, home, persist, resume }) {
+  // `resume` (when present) restores an in-progress session at its last phase
+  // boundary — completed exercises are kept; a half-entered current screen is not.
+  const [phase, setPhase] = useState(resume?.phase ?? "priming"); // priming | opening | estimates | loop | closing | summary
+  const [priming, setPriming] = useState(resume?.priming ?? null);
+  const [star, setStar] = useState(resume?.star ?? null);
+  const [before, setBefore] = useState(resume?.before ?? null);
+  const [recall, setRecall] = useState(resume?.recall ?? null);
+  const [estimates, setEstimates] = useState(resume?.estimates ?? null);
+  const [loopIndex, setLoopIndex] = useState(resume?.loopIndex ?? 0);
+  const [results, setResults] = useState(resume?.results ?? []);
+  const [closingData, setClosingData] = useState(resume?.closingData ?? null);
   const wakeLockRef = useRef(null);
+
+  // Autosave the in-progress session as a draft on every phase-boundary change,
+  // so a reload can resume it. Skipped once complete (summary) — the finished
+  // session is in the database and the draft is cleared at that point.
+  useEffect(() => {
+    if (phase === "summary") return;
+    saveDraft("physio", { config, phase, priming, star, before, recall, estimates, loopIndex, results, closingData });
+  }, [config, phase, priming, star, before, recall, estimates, loopIndex, results, closingData]);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +84,12 @@ export function PhysioSession({ config, home }) {
       )}
 
       {phase === "closing" && (
-        <Closing items={items} star={star} onNext={(c) => { setClosingData(c); setPhase("summary"); }} />
+        <Closing items={items} star={star} onNext={(c) => {
+          setClosingData(c);
+          setPhase("summary");
+          clearDraft();
+          persist?.({ ...session, closing: c, after: c.after });
+        }} />
       )}
 
       {phase === "summary" && closingData && (
