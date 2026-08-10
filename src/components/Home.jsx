@@ -1,6 +1,33 @@
 import React from "react";
 import { C } from "../constants";
+import { draftSummary } from "../draft";
 import { Mark } from "./Shell";
+
+function ResumeCard({ draft, onContinue, onDiscard }) {
+  const s = draftSummary(draft);
+  if (!s) return null;
+  return (
+    <div style={{ background: C.ink, color: "#fff", borderRadius: 18, padding: "18px 18px 16px", margin: "0 0 22px" }}>
+      <div style={{ fontSize: 12.5, letterSpacing: .3, opacity: .7, fontWeight: 700, textTransform: "uppercase" }}>
+        In-progress session
+      </div>
+      <div style={{ fontSize: 18, fontWeight: 700, margin: "6px 0 2px" }}>{s.label}</div>
+      <div style={{ fontSize: 13.5, opacity: .8 }}>
+        {s.detail}{s.time ? ` · started ${s.time}` : ""}
+      </div>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 14 }}>
+        <button className="tw-focus tw-lift" onClick={onContinue}
+          style={{ background: "#fff", color: C.ink, border: "none", borderRadius: 12, padding: "10px 18px", fontSize: 14, fontWeight: 700 }}>
+          Continue
+        </button>
+        <button className="tw-focus" onClick={() => { if (confirm("Discard the in-progress session? This can't be undone.")) onDiscard(); }}
+          style={{ background: "none", border: "none", color: "#fff", opacity: .7, fontSize: 13, fontWeight: 600 }}>
+          Discard
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function TileBtn({ onClick, title, sub, foot }) {
   return (
@@ -13,7 +40,7 @@ function TileBtn({ onClick, title, sub, foot }) {
   );
 }
 
-export function Home({ bank, physioBank, readingBank, sessions, domain, setDomain, go }) {
+export function Home({ bank, physioBank, readingBank, sessions, domain, setDomain, go, draft, onContinue, onDiscardDraft }) {
   const approvedSpeech = bank.filter((b) => b.approved).length;
 
   return (
@@ -25,6 +52,8 @@ export function Home({ bank, physioBank, readingBank, sessions, domain, setDomai
       <p style={{ color: C.inkSoft, fontSize: 16, maxWidth: 540, margin: "0 0 26px" }}>
         Choose what to work on today.
       </p>
+
+      {draft && <ResumeCard draft={draft} onContinue={onContinue} onDiscard={onDiscardDraft} />}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12 }}>
         <button className="tw-focus tw-lift" onClick={() => { setDomain("speech"); go("setup"); }}
