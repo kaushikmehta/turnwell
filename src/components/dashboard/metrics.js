@@ -15,16 +15,45 @@ function num(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-// DB rows -> physio sessions, oldest first (charts read left→right in time).
-export function toPhysioSessions(rows) {
+// DB rows -> sessions for one domain, oldest first (charts read left→right).
+// `domain` is attached so an opened session can be routed to the right detail.
+export function toDomainSessions(rows, domain) {
   return rows
-    .filter((r) => r.domain === "physio" && r.payload)
+    .filter((r) => r.domain === domain && r.payload)
     .map((r) => ({
       id: r.id,
       at: r.payload.at ?? (r.performedAt ? new Date(r.performedAt).getTime() : 0),
       payload: r.payload,
+      domain,
     }))
     .sort((a, b) => a.at - b.at);
+}
+
+export const toPhysioSessions = (rows) => toDomainSessions(rows, "physio");
+
+// Per-session metrics for the cue-ladder domains (speech, reading). Both score
+// 0 (independent) … 4 (not yet), so independence % and average support are
+// comparable across them. `ratings` is RATINGS or READING_RATINGS.
+export function languageMetrics(s, ratings) {
+  const results = s.payload?.results || [];
+  const total = results.length;
+  const counts = Object.fromEntries(ratings.map((rt) => [rt.key, 0]));
+  let scoreSum = 0, scored = 0;
+  results.forEach((r) => {
+    if (counts[r.rating] != null) counts[r.rating] += 1;
+    const rt = ratings.find((x) => x.key === r.rating);
+    if (rt) { scoreSum += rt.score; scored += 1; }
+  });
+  const independent = counts.independent || 0;
+  return {
+    id: s.id,
+    at: s.at,
+    total,
+    independent,
+    independencePct: total ? Math.round((independent / total) * 100) : null,
+    avgSupport: scored ? scoreSum / scored : null,
+    counts,
+  };
 }
 
 // Per-session headline metrics.
