@@ -108,9 +108,9 @@ export function Home({ bank, physioBank, readingBank, sessions, domain, setDomai
       <div style={{ marginTop: 12 }}>
         <TileBtn
           onClick={() => go("dashboard")}
-          title="Physio dashboard"
+          title="Dashboard"
           sub="Insights over time"
-          foot="Involvement, standing & prediction trends — plus per-session scores" />
+          foot="Trends & per-session detail across physio, speech, and reading" />
       </div>
     </div>
   );
