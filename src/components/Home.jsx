@@ -104,6 +104,14 @@ export function Home({ bank, physioBank, readingBank, sessions, domain, setDomai
             foot="Sessions from this sitting — send each to the therapist to keep it" />
         </div>
       )}
+
+      <div style={{ marginTop: 12 }}>
+        <TileBtn
+          onClick={() => go("dashboard")}
+          title="Physio dashboard"
+          sub="Insights over time"
+          foot="Involvement, standing & prediction trends — plus per-session scores" />
+      </div>
     </div>
   );
 }

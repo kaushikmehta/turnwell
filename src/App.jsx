@@ -13,6 +13,7 @@ import { ReadingSession } from "./components/ReadingSession";
 import { Session } from "./components/Session";
 import { Summary } from "./components/Summary";
 import { Progress } from "./components/Progress";
+import { Dashboard } from "./components/dashboard/Dashboard";
 import { Library } from "./components/Library";
 
 export default function App() {
@@ -31,6 +32,20 @@ export default function App() {
 
   const saveBank = useCallback((next) => setBank(next), []);
   const saveSessions = useCallback((next) => setSessions(next), []);
+
+  // Direct-link support: #dashboard / #progress / #home open that view (the app
+  // is otherwise view-state only, no router). Read-only — reflects the URL into
+  // state on load and on manual hash changes.
+  useEffect(() => {
+    const routable = ["home", "dashboard", "progress"];
+    const apply = () => {
+      const h = window.location.hash.replace(/^#/, "");
+      if (routable.includes(h)) setView(h);
+    };
+    apply();
+    window.addEventListener("hashchange", apply);
+    return () => window.removeEventListener("hashchange", apply);
+  }, []);
 
   // Autosave the speech run as a draft while it's live (physio/reading autosave
   // themselves — their state lives inside their own components).
@@ -157,6 +172,9 @@ export default function App() {
       )}
       {view === "progress" && (
         <Progress sessions={sessions} clear={() => saveSessions([])} back={() => setView("home")} />
+      )}
+      {view === "dashboard" && (
+        <Dashboard back={() => setView("home")} />
       )}
     </Shell>
   );
