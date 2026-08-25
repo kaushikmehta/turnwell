@@ -219,16 +219,67 @@ export const METRONOME_MIN_BPM = 10;
 export const METRONOME_MAX_BPM = 120;
 export const METRONOME_STEP_BPM = 2;
 
-/* Fade probe — once per session, at closing. */
+/* Fade probe — once per session, at closing (recorded at the sit-down after
+   standing, §9.3). Structured on the same 0–8 support scale as everything else
+   so it is the densest daily signal on the primary goal (§4.4). */
 export const FADE_PROBE_NOTE =
   "Once per session, on one activity, reduce your facilitation and see what remains. Probing is not progressing — you probe daily to collect data, and only actually reduce support when involvement says he's ready.";
 
+/* Kept for reading old sessions that stored the pre-§4.4 outcome key. */
 export const FADE_OUTCOMES = [
   { key: "nothing",  label: "Nothing remained" },
   { key: "flicker",  label: "A flicker held" },
   { key: "brief",    label: "Held briefly" },
   { key: "held",     label: "Held it" },
 ];
+export const FADE_PROBE_OUTCOMES = [
+  { key: "held",             label: "Held it" },
+  { key: "partial",          label: "Partial" },
+  { key: "lost_immediately", label: "Lost immediately" },
+];
+
+/* ================================================================
+   OPENING STATE (handoff §4.2) — the "since last session" fields. Near-daily,
+   facilitator-run, so this replaces any separate daily-log surface — do not
+   build a second state-tracking screen. Drives the discount gate (§6):
+   post_ictal, fatigue_pre >= 7, or alertness <= 2 discount a session.
+   ================================================================ */
+export const INSTRUCTION_FOLLOWING = [
+  { key: "none",        label: "None" },
+  { key: "single_step", label: "Single-step" },
+  { key: "two_step",    label: "Two-step" },
+  { key: "multi_step",  label: "Multi-step" },
+];
+export const INITIATION = [
+  { key: "absent",  label: "Absent" },
+  { key: "delayed", label: "Delayed" },
+  { key: "prompt",  label: "Prompt" },
+];
+/* 1–5 clinical mini-scales (distinct from the subjective before/after
+   tired/mood/motivation ratings, which stay). */
+export const SLEEP_QUALITY_SCALE = [1, 2, 3, 4, 5];
+export const ALERTNESS_SCALE = [1, 2, 3, 4, 5]; // 1 drowsy … 5 fully alert
+
+export const emptyOpeningState = () => ({
+  sleep_hours: "", sleep_quality: null,
+  fatigue_pre: null, alertness: null,
+  instruction_following: null, initiation: null,
+  pain: null, pain_location: "",
+  seizure_since_last: false,
+  seizure_detail: { datetime: "", duration_seconds: "", description: "", recovery_minutes: "" },
+  post_ictal: false,
+  medication_change: false, medication_note: "",
+});
+/* A session is discounted from the progression gate when any of these hold. */
+export const isDiscounted = (st) =>
+  !!st && (st.post_ictal === true || (typeof st.fatigue_pre === "number" && st.fatigue_pre >= 7) || (typeof st.alertness === "number" && st.alertness <= 2));
+export const discountReason = (st) => {
+  if (!st) return null;
+  if (st.post_ictal) return "post-ictal";
+  if (typeof st.fatigue_pre === "number" && st.fatigue_pre >= 7) return `high fatigue (${st.fatigue_pre}/10)`;
+  if (typeof st.alertness === "number" && st.alertness <= 2) return `low alertness (${st.alertness}/5)`;
+  return null;
+};
 
 /* ================================================================
    STANDING DOSE (handoff §4.3) — replaces the vague quality rating.

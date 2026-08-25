@@ -4,7 +4,7 @@
  * written to be read by a human (the coordinator, later you), not parsed by a script.
  */
 import { ratingByKey, supportWord, isDeck, isScene } from "./utils";
-import { READING_RATINGS, RECALL_RATINGS, READINESS_STEPS, ROM_SEGMENTS, STATE_METRICS, unitLabel, supportLabel, skinCheckAlerts, montageLabel } from "./constants";
+import { READING_RATINGS, RECALL_RATINGS, READINESS_STEPS, ROM_SEGMENTS, STATE_METRICS, unitLabel, supportLabel, skinCheckAlerts, montageLabel, isDiscounted, discountReason } from "./constants";
 
 const understandWord = { yes: "yes", partly: "partly", no: "no" };
 
@@ -99,7 +99,9 @@ const involveWord = {
   0: "0 passive", 1: "1 flicker", 2: "2 with help", 3: "3 carries on", 4: "4 on his own",
 };
 const fadeWord = {
-  nothing: "nothing remained", flicker: "a flicker held", brief: "held briefly", held: "held it",
+  // structured (§4.4) outcomes + legacy keys for old sessions
+  held: "held it", partial: "partial", lost_immediately: "lost immediately",
+  nothing: "nothing remained", flicker: "a flicker held", brief: "held briefly",
 };
 const ankleWord = {
   neutral: "reaches neutral", tight: "tight, short of neutral", lost: "not close to neutral",
@@ -111,7 +113,7 @@ const probeWord = {
 const recallWord = Object.fromEntries(RECALL_RATINGS.map((r) => [r.key, r.label.toLowerCase()]));
 
 export function buildPhysioReport(session, patientName = "Akki") {
-  const { items, results, star, before, after, closing, priming, recall, readiness, stim } = session;
+  const { items, results, star, before, after, closing, priming, recall, readiness, stim, openingState } = session;
   const dt = new Date(session.at || Date.now());
   const dateStr = dt.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const timeStr = dt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
@@ -134,6 +136,26 @@ export function buildPhysioReport(session, patientName = "Akki") {
       else return;
       lines.push(`  ${m.label}: ${val}`);
     });
+    lines.push("");
+  }
+
+  if (openingState) {
+    const st = openingState;
+    if (isDiscounted(st)) lines.push(`** SESSION DISCOUNTED — ${discountReason(st)}. Excluded from the "3" gate; won't break a streak. **`);
+    const bits = [];
+    if (st.sleep_hours !== "" && st.sleep_hours != null) bits.push(`sleep ${st.sleep_hours}h${st.sleep_quality ? ` (quality ${st.sleep_quality}/5)` : ""}`);
+    if (typeof st.fatigue_pre === "number") bits.push(`fatigue ${st.fatigue_pre}/10` + (typeof closing?.fatigue_post === "number" ? ` → ${closing.fatigue_post}/10 after` : ""));
+    if (typeof st.alertness === "number") bits.push(`alertness ${st.alertness}/5`);
+    if (st.instruction_following) bits.push(`instructions: ${st.instruction_following.replace(/_/g, "-")}`);
+    if (st.initiation) bits.push(`initiation ${st.initiation}`);
+    if (typeof st.pain === "number") bits.push(`pain ${st.pain}/10${st.pain_location ? ` (${st.pain_location})` : ""}`);
+    if (bits.length) lines.push(`State: ${bits.join(", ")}.`);
+    if (st.seizure_since_last) {
+      const d = st.seizure_detail || {};
+      lines.push(`Seizure since last session${d.datetime ? ` (${d.datetime})` : ""}${d.duration_seconds ? `, ${d.duration_seconds}s` : ""}${d.recovery_minutes ? `, recovery ${d.recovery_minutes}min` : ""}.${d.description ? ` ${d.description}` : ""}`);
+    }
+    if (st.post_ictal) lines.push(`Post-ictal today.`);
+    if (st.medication_change) lines.push(`Medication change${st.medication_note ? `: ${st.medication_note}` : ""}.`);
     lines.push("");
   }
 
@@ -277,9 +299,15 @@ export function buildPhysioReport(session, patientName = "Akki") {
   }
 
   if (closing && closing.fadeProbe) {
+    const fp = closing.fadeProbe;
     lines.push("");
-    lines.push(`Fade probe: ${fadeWord[closing.fadeProbe.outcome] || closing.fadeProbe.outcome}` +
-      (closing.fadeProbe.detail ? ` — ${closing.fadeProbe.detail}` : "") + ".");
+    const scale = (fp.start_support_level != null && fp.faded_to_support_level != null)
+      ? `${supportLabel(fp.start_support_level)} (${fp.start_support_level}) → ${supportLabel(fp.faded_to_support_level)} (${fp.faded_to_support_level})`
+      : null;
+    lines.push(`Fade probe: ${fadeWord[fp.outcome] || fp.outcome || "—"}` +
+      (scale ? `, ${scale}` : "") +
+      (fp.held_seconds != null ? `, held ${fp.held_seconds}s` : "") +
+      (fp.notes || fp.detail ? ` — ${fp.notes || fp.detail}` : "") + ".");
   }
 
   if (closing && closing.favouriteTitle) {
