@@ -272,6 +272,7 @@ export const seedPhysioExercises = () => [
   /* ---- Rung 2 — trunk ---- */
   {
     id: "seated-perturbation", title: "Seated perturbation — rhythmic nudges",
+    category: "active_training", position_block: "sitting", tracks_support: true, block_order: 2,
     rung: 2, tool: "perturbation", unit: "catches",
     instructions: "Supported sitting, you seated beside or behind him with hands at the pelvis or lower ribs. Small, controlled, unpredictable nudges — front/back, then side/side, to a beat. This is the primary route into trunk: trunk control is brainstem-driven, not cortical, so no verbal command reaches the postural system — the nudge has to do the asking.",
     cues: [
@@ -285,6 +286,7 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "seated-reach-limits", title: "Reach to the edge of balance",
+    category: "active_training", position_block: "sitting", tracks_support: true, block_order: 3,
     rung: 2, tool: "target", unit: "reaches",
     instructions: "Object placed just beyond comfortable reach, at increasing distance as tolerance grows. Right arm leads. Guard at the trunk.",
     cues: [
@@ -298,6 +300,7 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "cross-midline-reach", title: "Cross-midline reach",
+    category: "active_training", position_block: "sitting", tracks_support: true, block_order: 4,
     rung: 2, tool: "target", unit: "reaches",
     instructions: "Object placed across the body on the opposite side, so reaching drives rotation and loads the far hip. Right arm reaches across.",
     cues: [
@@ -311,6 +314,7 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "seated-weight-shift-beat", title: "Seated weight shift — to a beat",
+    category: "active_training", position_block: "sitting", tracks_support: true, block_order: 2,
     rung: 2, tool: "rhythm", unit: "shifts",
     instructions: "Metronome running. You rock him side to side with the pulse, easing your support as the rhythm carries. Do not ask him to shift — the beat and your hands do the initiating.",
     cues: [
@@ -324,6 +328,7 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "sitting-tolerance", title: "Supported sitting — tolerance",
+    category: "active_training", position_block: "sitting", tracks_support: true, block_order: 1,
     rung: 2, tool: "loading", unit: "minutes",
     instructions: "Sitting upright with support, feet flat and loaded. Build duration. Cognitive work runs on top of this — it's the natural slot for conversation and recall.",
     cues: [
@@ -339,6 +344,8 @@ export const seedPhysioExercises = () => [
   /* ---- Rung 3 — loading ---- */
   {
     id: "tram-weight-bearing", title: "TRAM weight-bearing",
+    category: "substrate", position_block: "standing", block_order: 2,
+    promotes_to_training_when: "involvement reaches 2 — the legs answer the load rather than just receiving it",
     rung: 3, tool: "loading", unit: "minutes",
     instructions: "In the TRAM, feet flat and hip-width apart, harness supporting his weight. Pressure through the foot sole drives reticulospinal and vestibulospinal extension — brainstem systems that bypass the damaged frontal cortex entirely. This is why standing is both the goal and the treatment.",
     cues: [
@@ -352,8 +359,10 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "tram-sit-to-stand", title: "TRAM sit-to-stand",
+    category: "substrate", position_block: "standing", is_transition: true, block_order: 1,
+    promotes_to_training_when: "involvement reaches 2 (legs taking some load)",
     rung: 3, tool: "loading", unit: "reps",
-    instructions: "In the TRAM with the harness set to carry a share of his weight — start with it taking most of the load so a full rep is achievable, and dial the support down over the weeks as involvement climbs. Nose over toes, drive up through both feet to the beat, then lower under control. The harness is what makes the whole sit-to-stand pattern repeatable now, when an unsupported one isn't — that repetition is the point. Build reps gradually: add one only once the last came with real leg involvement.",
+    instructions: "The transition into standing, not a strength drill — 1–2 reps only. At involvement 0 this is the TRAM performing lifts: no training value, but real cost in time, fatigue and saddle pressure. Do the transitions actually needed to reach the standing block and bank the rest of the time into standing minutes, which do have value at involvement 0. Nose over toes, drive up through both feet to the beat, then lower under control. Promotes back to active training once involvement reaches 2 — then build reps.",
     cues: [
       "Nose over toes — lean forward over your feet",
       "Push up through both feet with the beat",
@@ -365,6 +374,7 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "tram-arm-drive", title: "TRAM loading + right-arm drive",
+    category: "active_training", position_block: "standing", block_order: 3,
     rung: 3, tool: "irradiation", unit: "minutes",
     instructions: "Loaded in the TRAM while he pushes or pulls hard against your hands with the right arm, in a diagonal, to the beat. The arm effort is the point — it spills facilitation into the legs (irradiation).",
     cues: [
@@ -380,6 +390,7 @@ export const seedPhysioExercises = () => [
   /* ---- Rung 4 — extensor response (the milestone watch) ---- */
   {
     id: "extensor-probe", title: "Extensor response probe",
+    category: "probe", position_block: "standing", block_order: 4,
     rung: 4, tool: "stretch", unit: "attempts",
     instructions: "Under load in the TRAM: quick stretch, then rhythm, then right-arm effort, then observe whether the legs answer the load rather than just receiving it. This is a probe, not a drill — you are looking for the day the legs push back. Score involvement honestly: a 1 recorded accurately is worth more than a generous 2.",
     cues: [
@@ -393,6 +404,7 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "tram-knee-drive", title: "TRAM knee drive",
+    category: "active_training", position_block: "standing", block_order: 3,
     rung: 4, tool: "loading", unit: "attempts",
     instructions: "In the TRAM, standing supported.",
     cues: [
@@ -408,6 +420,7 @@ export const seedPhysioExercises = () => [
   /* ---- Rung 5–6 — dormant. Shown greyed in setup until Rung 4 lands. ---- */
   {
     id: "tram-weight-shift", title: "TRAM weight shift",
+    category: "active_training", position_block: "standing", block_order: 4,
     rung: 5, tool: "loading", unit: "shifts",
     instructions: "Standing in the TRAM, shifting weight side to side. The gateway to stepping: walking is standing on one leg while the other travels.",
     cues: [], watchFor: "",
@@ -417,6 +430,7 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "tram-single-limb-load", title: "Single-limb loading",
+    category: "active_training", position_block: "standing", block_order: 5,
     rung: 6, tool: "loading", unit: "minutes",
     instructions: "Tolerating load through one leg. If this can't happen, stepping cannot happen.",
     cues: [], watchFor: "",
@@ -428,6 +442,7 @@ export const seedPhysioExercises = () => [
   /* ---- Arm and general ---- */
   {
     id: "arm-reach-to-target", title: "Arm reach to target",
+    category: "active_training", position_block: "sitting", block_order: 6,
     rung: null, tool: "target", unit: "reaches",
     instructions: "Seated, a cup or object placed at arm's length. Support at the elbow if needed.",
     cues: [
@@ -441,6 +456,7 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "grip-squeeze", title: "Grip squeeze",
+    category: "active_training", position_block: "sitting", block_order: 7,
     rung: null, tool: "target", unit: "reps",
     instructions: "A rolled towel or soft ball placed in the hand.",
     cues: [
@@ -454,6 +470,7 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "real-object-task", title: "Real-object task",
+    category: "active_training", position_block: "sitting", block_order: 8,
     rung: null, tool: "automatic", unit: "task",
     instructions: "Movement embedded in a real, meaningful, familiar action — drinking from a cup, a grooming step, handling a personal object. Automatic and volitional movement dissociate: movement that won't appear on command frequently appears inside a real action, because it recruits different circuitry. Log anything spontaneous.",
     cues: [
@@ -469,6 +486,7 @@ export const seedPhysioExercises = () => [
   /* ---- Probe-only. Weekly measurement, not daily training. ---- */
   {
     id: "knee-extension-probe", title: "Knee extension — probe (inner range)",
+    category: "probe", position_block: "sidelying", block_order: 1,
     rung: null, tool: "stretch", unit: "attempts", probeOnly: true,
     instructions: "Supine with a rolled towel under the knee (slight bend), leg supported. One hand under the knee/roll; the other lightly over the quadriceps, or under the heel to feel it lift. This is a weekly measurement of whether anything is appearing on command, not daily training. Expect a 0 or 1 for now — that's information, not failure.",
     cues: [
@@ -482,6 +500,7 @@ export const seedPhysioExercises = () => [
   },
   {
     id: "ankle-dorsiflexion-probe", title: "Ankle dorsiflexion — probe",
+    category: "probe", position_block: "sidelying", block_order: 2,
     rung: null, tool: "stretch", unit: "attempts", probeOnly: true,
     instructions: "Seated or supine, foot free of support. One hand resting lightly on top of the foot/shin — not guiding, just there to feel for movement. This is a weekly measurement of whether anything is appearing on command, not daily training. Expect a 0 or 1 for now — that's information, not failure.",
     cues: [
@@ -491,6 +510,123 @@ export const seedPhysioExercises = () => [
     ],
     watchFor: "WORKING = toes/foot lifting from the ankle, even a small flicker. COMPENSATION = the whole leg lifting from the hip, or the knee bending to substitute.",
     quickStretch: "calf — brisk lengthen into dorsiflexion", isStanding: false,
+    mediaUrl: "", defaultDualTask: false,
+  },
+
+  /* ---- Transitions & trunk activation (handoff §3A, §9) ----
+     Postural changes are the highest-value functional items and are trained
+     AS the transitions between blocks rather than as separate drills. The
+     core-activation ordering follows the entry-point principle: choose
+     exercises whose entry point is a segment Akki controls (the arms), so
+     trunk activity is driven through irradiation rather than from the
+     impaired segment. */
+  {
+    id: "segmental-rolling", title: "Segmental rolling — supine to sidelying",
+    category: "active_training", position_block: "sidelying", is_transition: true, block_order: 1, tracksRoll: true,
+    rung: 2, tool: "automatic", unit: "reps",
+    instructions: "The transition into block two — this is how the session reaches sidelying, not a drill performed and undone. Segmental (shoulder-led or pelvis-led) trains trunk dissociation; log rolling is the compensatory whole-body pattern. Schedule segmental as the majority. Arm leads the shoulder-led pattern, so the entry point is a segment he controls.",
+    cues: [
+      "Reach your top arm across — let your shoulder follow",
+      "Now let your hips come round after",
+      "Roll segment by segment, not all at once",
+    ],
+    watchFor: "WORKING = the trunk rotating in segments, shoulder and pelvis dissociating. COMPENSATION = a rigid log roll, the whole body turning as one block.",
+    quickStretch: "", isStanding: false,
+    mediaUrl: "", defaultDualTask: false,
+  },
+  {
+    id: "come-to-sit", title: "Come to sit — through sidelying",
+    category: "active_training", position_block: "sitting", is_transition: true, block_order: 0,
+    rung: 2, tool: "automatic", unit: "reps",
+    instructions: "Assisted come-to-sit through sidelying — the transition from block two into the sitting block. Push through the underneath arm as the legs come off the edge. Right (preserved) arm does real work here.",
+    cues: [
+      "Push down through your bottom arm",
+      "Let your legs come down as you come up",
+      "Sit tall once you're up — find the middle",
+    ],
+    watchFor: "WORKING = active push through the arm, trunk contributing to the rise. COMPENSATION = being lifted with no push, or collapsing sideways once upright.",
+    quickStretch: "", isStanding: false,
+    mediaUrl: "", defaultDualTask: false,
+  },
+  {
+    id: "rhythmic-stabilisation", title: "Rhythmic stabilisation in sitting",
+    category: "active_training", position_block: "sitting", tracks_support: true, block_order: 1,
+    rung: 2, tool: "perturbation", unit: "catches",
+    instructions: "Top of the core-activation order. Co-contraction is what core stability is: apply alternating gentle resistance at the trunk while he holds still, so the resistance is supplied externally rather than requiring him to generate force — and it happens in the position where the capability is needed. Build up and ease off the resistance smoothly.",
+    cues: [
+      "Hold still — don't let me move you",
+      "Match me, don't push back hard",
+      "Stay tall while I change direction",
+    ],
+    watchFor: "WORKING = the trunk holding against changing directions of resistance, co-contraction under the hands. COMPENSATION = toppling when the direction changes, or bracing through the arms.",
+    quickStretch: "", isStanding: false,
+    mediaUrl: "", defaultDualTask: false,
+  },
+  {
+    id: "pnf-chop-lift", title: "PNF chop / lift",
+    category: "active_training", position_block: "sitting", tracksPnf: true, block_order: 2,
+    rung: 2, tool: "irradiation", unit: "reps",
+    instructions: "Irradiation from the working upper limbs, with rotation — the arms are the handle and drive trunk musculature through overflow. Same target muscles as bridging, but the route is open: the entry point is a segment he commands. Chop drives down-and-across, lift drives up-and-across; grade the phase from passive through resisted as he takes over.",
+    cues: [
+      "Both hands together — follow them across and down",
+      "Now reverse it — up and across the other way",
+      "Let your trunk turn with your arms",
+    ],
+    watchFor: "WORKING = trunk rotation and activity appearing during the arm drive that isn't there at rest. COMPENSATION = arms moving while the trunk stays passive.",
+    quickStretch: "", isStanding: false,
+    mediaUrl: "", defaultDualTask: false,
+  },
+  {
+    id: "forward-lean-table", title: "Forward lean onto a table — on forearms",
+    category: "active_training", position_block: "sitting", tracks_support: true, block_order: 3,
+    substitutes_for: "prone on elbows",
+    progression_target: "Prone on elbows",
+    rung: 2, tool: "loading", unit: "minutes",
+    instructions: "In sitting, lean forward onto a table on the forearms. Same upper-limb weight-bearing and thoracic extension demand as prone-on-elbows, but with no postural transition and no neck-extension tolerance required — the substitute that works inside the sitting block until prone is achievable.",
+    cues: [
+      "Lean forward and take weight through your forearms",
+      "Lift your chest — long through the top of your back",
+      "Push gently down through your elbows",
+    ],
+    watchFor: "WORKING = thoracic extension with weight genuinely through the forearms. COMPENSATION = slumping onto the table with a rounded back, no active extension.",
+    quickStretch: "", isStanding: false,
+    mediaUrl: "", defaultDualTask: false,
+  },
+  {
+    id: "side-sitting-prop", title: "Side-sitting prop — one arm",
+    category: "active_training", position_block: "sitting", tracks_support: true, block_order: 4,
+    substitutes_for: "quadruped",
+    progression_target: "Quadruped",
+    rung: 2, tool: "loading", unit: "minutes",
+    instructions: "Propped through one arm in side-sitting — lateral trunk loading and single-arm weight bearing, reachable from the sitting block. The substitute for quadruped while quadruped is not yet achievable.",
+    cues: [
+      "Prop on your hand — take weight through that arm",
+      "Lift up away from the floor, don't sink into it",
+      "Hold tall through your side",
+    ],
+    watchFor: "WORKING = active lateral trunk holding him up off the propping arm. COMPENSATION = collapsing down onto the shoulder, no lateral flexor work.",
+    quickStretch: "", isStanding: false,
+    mediaUrl: "", defaultDualTask: false,
+  },
+
+  /* ---- Substrate — wind-down (handoff §3A). Fatigue-indifferent, so it goes
+     late where it costs nothing. Not involvement-scored. Bridging defaults to
+     substrate pending the physio's palpation test (§3A): at involvement 0–1 the
+     facilitator supplies the lift, so there is no torque to resist and no
+     stabiliser demand — the shape is present, the stimulus is not. */
+  {
+    id: "bridging", title: "Bridging",
+    category: "substrate", position_block: "wind_down", block_order: 1,
+    promotes_to_training_when: "probes detect glute or hamstring activity, or the palpation test is positive",
+    rung: 2, tool: "loading", unit: "reps",
+    instructions: "Retained for hip-extension range and pelvis-lift for care mobility. Classified as substrate pending the palpation test: during three bridges, the physio palpates the lower abdominals and obliques — is anything detectable under the hand during the lift or hold? If yes, this promotes back to active training. Log dose only; do not score involvement until it graduates.",
+    cues: [
+      "Feet flat, and lift your hips towards the ceiling",
+      "Squeeze and hold at the top",
+      "Lower down slowly, one bone at a time",
+    ],
+    watchFor: "WORKING = (once graduated) stabiliser activity resisting the arching torque. For now = range achieved and skin/pressure relief for care.",
+    quickStretch: "", isStanding: false,
     mediaUrl: "", defaultDualTask: false,
   },
 ];

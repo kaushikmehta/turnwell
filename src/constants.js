@@ -112,6 +112,79 @@ export const INVOLVEMENT = [
 /* Gate rule shown in the app so nobody progresses on a single good day. */
 export const GATE_RULE = "Progress standing time or reduce support only after a 3 appears and repeats across sessions. One good moment is noise.";
 
+/* ================================================================
+   TWO-AXIS PRINCIPLE (handoff §3) — sitting only
+   Involvement (above) measures neural contribution; support level
+   measures where the facilitator's hands were. They move independently
+   and both must be recorded for sitting, so progress on either axis is
+   visible. Aligned to SATCo support placements so the daily metric and
+   the fortnightly clinical assessment share one axis.
+   ================================================================ */
+export const SUPPORT_LEVELS = [
+  { level: 0, label: "Fully reclined",     note: "No active demand." },
+  { level: 1, label: "Full back support",  note: "Upright with full back support." },
+  { level: 2, label: "Shoulder girdle",    note: "Hands at the shoulder girdle." },
+  { level: 3, label: "Axillae",            note: "Hands at the axillae." },
+  { level: 4, label: "Inferior scapula",   note: "Hands at the inferior scapula." },
+  { level: 5, label: "Lower ribs",         note: "Hands at the lower ribs." },
+  { level: 6, label: "Upper lumbar",       note: "Hands below the ribs (upper lumbar)." },
+  { level: 7, label: "Pelvis",             note: "Hands at the pelvis." },
+  { level: 8, label: "No support",         note: "Hands hovering / off." },
+];
+export const supportLabel = (n) => (SUPPORT_LEVELS[n] ? SUPPORT_LEVELS[n].label : "—");
+
+/* ================================================================
+   EXERCISE CATEGORIES (handoff §3A) — drives scheduling, scoring, charting
+     active_training — he can contribute now; involvement ≥2 achievable.
+                       Fatigue-sensitive (schedule early). Involvement-scored.
+     substrate       — passive/load-based (ROM, positioning, bone loading,
+                       stretch under body weight). Fatigue-indifferent. NOT
+                       involvement-scored — log dose/range/completion only.
+     probe           — hunting for trace activity below visible movement.
+                       Most fatigue-sensitive. Detection outcome, not involvement.
+   ================================================================ */
+export const EXERCISE_CATEGORIES = {
+  active_training: { key: "active_training", label: "Active training", fatigueSensitive: true,  involvementScored: true },
+  substrate:       { key: "substrate",       label: "Substrate",       fatigueSensitive: false, involvementScored: false },
+  probe:           { key: "probe",           label: "Probe",           fatigueSensitive: true,  involvementScored: false },
+};
+/* Default so pre-category rows and typed-in exercises still behave: an
+   exercise with no category is treated as active_training (the old default —
+   everything was involvement-scored). */
+export const categoryOf = (ex) => (ex && ex.category) || "active_training";
+export const isInvolvementScored = (ex) => EXERCISE_CATEGORIES[categoryOf(ex)].involvementScored;
+
+/* Position blocks (handoff §9) — the one-way postural sequence. Demand items
+   run non-decreasing supine → sitting → standing; the wind-down may return to
+   supine but carries substrate only. */
+export const POSITION_BLOCKS = [
+  { key: "supine",    label: "Supine",    order: 0 },
+  { key: "sidelying", label: "Sidelying", order: 1 },
+  { key: "sitting",   label: "Sitting",   order: 2 },
+  { key: "standing",  label: "Standing",  order: 3 },
+  { key: "wind_down", label: "Wind-down", order: 4 },
+];
+export const positionOrder = (key) => {
+  const b = POSITION_BLOCKS.find((p) => p.key === key);
+  return b ? b.order : 99;
+};
+
+/* Detection outcome for probe exercises (handoff §3A) — a probe records
+   whether trace activity was found, not an involvement score. */
+export const PROBE_OUTCOMES = [
+  { key: "nothing",   label: "Nothing detected" },
+  { key: "flicker",   label: "Flicker under the hand" },
+  { key: "movement",  label: "Visible movement" },
+];
+
+/* Segment tightness — one tap per priming segment (handoff §4.1). Feeds the
+   contracture early-warning heatmap. */
+export const TIGHTNESS_OPTIONS = [
+  { key: "normal",             label: "Normal",       color: C.sage,     tint: C.sageTint },
+  { key: "tighter_than_usual", label: "Tighter",      color: C.clay,     tint: C.clayTint },
+  { key: "catch_felt",         label: "Catch felt",   color: C.clayDeep, tint: "#EFDCC8" },
+];
+
 /* Warm-up & readiness — the prep tasks. Set up on the session-setup screen
    rather than run live: get him loaded through the feet, wake the motor
    system, and confirm he's actually alert before anything starts. */
@@ -157,11 +230,119 @@ export const FADE_OUTCOMES = [
   { key: "held",     label: "Held it" },
 ];
 
-/* Standing quality — the limiter now that orthostatic risk has resolved. */
+/* Standing quality — the limiter now that orthostatic risk has resolved.
+   DEPRECATED (handoff §4.3): replaced by the concrete STANDING_DOSE fields
+   below. Kept only until the ExerciseLoop rework consumes the replacement. */
 export const STANDING_QUALITY = [
   { key: "held",     label: "Quality held" },
   { key: "faded",    label: "Faded near the end" },
   { key: "degraded", label: "Degraded — stopped early" },
+];
+
+/* ================================================================
+   STANDING DOSE (handoff §4.3) — replaces the vague quality rating.
+   A TRAM stand can become suspension (load in the walking saddle, knees
+   flexed) while minutes still trend up, so record what actually loaded.
+   ================================================================ */
+export const STANDING_DEVICES = [
+  { key: "tram",           label: "TRAM" },
+  { key: "standing_frame", label: "Standing frame" },
+  { key: "other",          label: "Other" },
+];
+export const KNEE_POSITIONS = [
+  { key: "extended",             label: "Extended",     note: "Knees loaded through extension." },
+  { key: "intermittent_buckling",label: "Intermittent", note: "Buckling now and then." },
+  { key: "flexed_suspended",     label: "Suspended",    note: "Flexed — weight in the saddle, not the legs.", warn: true },
+];
+export const LEG_LOADING = [
+  { key: "none_visible", label: "None visible" },
+  { key: "partial",      label: "Partial" },
+  { key: "substantial",  label: "Substantial" },
+];
+/* Skin check under the saddle / at electrode sites. non_blanching and broken
+   raise an alert and block standing progression until cleared (§4.3, §6). */
+export const SKIN_CHECK = [
+  { key: "clear",                label: "Clear",              alert: false },
+  { key: "redness_blanching",    label: "Redness (blanches)", alert: false },
+  { key: "redness_non_blanching",label: "Redness (stays)",    alert: true },
+  { key: "broken_skin",          label: "Broken skin",        alert: true },
+];
+export const skinCheckAlerts = (key) => {
+  const s = SKIN_CHECK.find((x) => x.key === key);
+  return !!(s && s.alert);
+};
+export const TOLERANCE_END_REASONS = [
+  { key: "planned_end", label: "Planned end" },
+  { key: "fatigue",     label: "Fatigue" },
+  { key: "dizziness",   label: "Dizziness" },
+  { key: "pain",        label: "Pain" },
+  { key: "distress",    label: "Distress" },
+  { key: "skin",        label: "Skin" },
+  { key: "other",       label: "Other" },
+];
+
+/* Sitting-specific detail (handoff §4.3). */
+export const SITTING_SURFACES = [
+  { key: "firm_plinth", label: "Firm plinth" },
+  { key: "compliant",   label: "Compliant" },
+  { key: "edge_of_bed", label: "Edge of bed" },
+  { key: "wheelchair",  label: "Wheelchair" },
+];
+
+/* Rolling patterns (handoff §4.3). Segmental trains trunk dissociation; log
+   rolling is the compensatory pattern — schedule segmental as the majority. */
+export const ROLL_PATTERNS = [
+  { key: "log",                    label: "Log roll" },
+  { key: "segmental_shoulder_led", label: "Segmental · shoulder-led" },
+  { key: "segmental_pelvis_led",   label: "Segmental · pelvis-led" },
+];
+export const ROLL_DIRECTIONS = [
+  { key: "left",  label: "Left" },
+  { key: "right", label: "Right" },
+];
+
+/* PNF trunk patterns (handoff §4.3) — new exercise type. */
+export const PNF_PATTERNS = [
+  { key: "chop",                       label: "Chop" },
+  { key: "reverse_chop",               label: "Reverse chop" },
+  { key: "lift",                       label: "Lift" },
+  { key: "reverse_lift",               label: "Reverse lift" },
+  { key: "rhythmic_stabilisation",     label: "Rhythmic stabilisation" },
+  { key: "rhythmic_initiation",        label: "Rhythmic initiation" },
+  { key: "pelvic_anterior_elevation",  label: "Pelvic anterior elevation" },
+  { key: "pelvic_posterior_depression",label: "Pelvic posterior depression" },
+];
+export const PNF_PHASES = [
+  { key: "passive",         label: "Passive" },
+  { key: "active_assisted", label: "Active-assisted" },
+  { key: "active",          label: "Active" },
+  { key: "resisted",        label: "Resisted" },
+];
+
+/* ================================================================
+   xStep — transcutaneous spinal stimulation (handoff §4.5)
+   Montage is set once at setup; current changes frequently. Montage is
+   stamped per exercise so the app can eventually compare which montage
+   produces better involvement for which exercise.
+   ================================================================ */
+export const STIM_MONTAGES = [
+  { key: "upper_body", label: "Upper body", red: "C4–C5",   blue: "C7–T1" },
+  { key: "full_body",  label: "Full body",  red: "C7–T1",   blue: "T11–T12" },
+  { key: "lower_body", label: "Lower body", red: "T11–T12", blue: "L1–L2" },
+];
+export const montageLabel = (key) => {
+  const m = STIM_MONTAGES.find((x) => x.key === key);
+  return m ? m.label : "—";
+};
+export const STIM_CURRENT_MIN = 0;
+export const STIM_CURRENT_MAX = 120;
+export const STIM_CURRENT_STEP = 1;
+/* Optional annotation on a current change — distinguishes titration-chasing
+   ("no response") from planned progression. */
+export const STIM_CHANGE_REASONS = [
+  { key: "no_response", label: "No response" },
+  { key: "discomfort",  label: "Discomfort" },
+  { key: "protocol",    label: "Protocol" },
 ];
 
 /* What "count" means for a given exercise. Reps is meaningless for TRAM
