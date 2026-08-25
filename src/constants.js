@@ -431,6 +431,113 @@ export const UNIT_LABELS = {
 };
 export const unitLabel = (unit) => UNIT_LABELS[unit] || "reps";
 
+/* ================================================================
+   ASSESSMENTS (handoff §5) — clinical / periodic instruments are RECORDED,
+   never administered. The app never presents test items (licensing + test
+   validity). Each is stored in the sessions table as domain physio with
+   payload.kind = 'assessment' and payload.assessment_type.
+   ================================================================ */
+export const ASSESSMENT_TYPES = [
+  { key: "satco",              label: "SATCo",               cadence: "Fortnightly", blurb: "Segmental trunk control — 7 levels × static/active/reactive." },
+  { key: "tardieu",           label: "Modified Tardieu",    cadence: "Monthly",     blurb: "Spasticity vs contracture — R1 catch angle vs R2 full range." },
+  { key: "goniometry",        label: "Goniometry",          cadence: "Monthly",     blurb: "Joint range per motion, per side." },
+  { key: "peak_cough_flow",   label: "Peak cough flow",     cadence: "Monthly",     blurb: "Best of three (L/min). Trunk weakness degrades cough." },
+  { key: "tis",               label: "TIS",                 cadence: "Quarterly",   blurb: "Trunk Impairment Scale — static / dynamic / coordination." },
+  { key: "scim3",             label: "SCIM III",            cadence: "Quarterly",   blurb: "Independence / care burden (0–100)." },
+  { key: "gas",               label: "GAS",                 cadence: "Quarterly",   blurb: "Goal Attainment — −2…+2 per pre-written goal." },
+  { key: "fss",               label: "FSS",                 cadence: "Quarterly",   blurb: "Fatigue Severity Scale — 9 items, 1–7, stored as mean." },
+  { key: "cognitive_external",label: "External cognitive",  cadence: "As done",     blurb: "Record a MoCA / ACE-III score administered elsewhere." },
+];
+
+/* SATCo (§5.1). Seven segmental levels × three control types; each present /
+   absent / not-tested. Levels 1–7 are tested; 8 = full trunk control shown. */
+export const SATCO_LEVELS = [
+  { level: 1, label: "Head" },
+  { level: 2, label: "Upper thoracic" },
+  { level: 3, label: "Mid-thoracic" },
+  { level: 4, label: "Lower thoracic" },
+  { level: 5, label: "Upper lumbar" },
+  { level: 6, label: "Lower lumbar" },
+  { level: 7, label: "Full trunk (tested)" },
+];
+export const SATCO_CONTROLS = [
+  { key: "static",   label: "Static",   help: "Neutral vertical head & trunk held 5 seconds." },
+  { key: "active",   label: "Active",   help: "Neutral posture kept while turning head 45° and/or reaching both sides." },
+  { key: "reactive", label: "Reactive", help: "Neutral posture kept or quickly regained after a brisk nudge." },
+];
+export const SATCO_CELLS = ["P", "A", "NT"];
+/* Highest level with control present, counting contiguous P from level 1.
+   All seven present → 8 (full trunk control demonstrated). 0 = none. */
+export const satcoLevel = (grid, control) => {
+  let n = 0;
+  for (let l = 1; l <= 7; l++) {
+    if (grid[l] && grid[l][control] === "P") n = l; else break;
+  }
+  return n === 7 ? 8 : n;
+};
+
+/* Modified Tardieu (§5.2) — replaces Ashworth; separates spasticity from
+   contracture. R1 = catch angle at fast stretch, R2 = full range at slow
+   stretch; R2−R1 is the clinically meaningful object. */
+export const TARDIEU_MUSCLES = [
+  { key: "plantarflexors_knee_ext",  label: "Plantarflexors (knee ext)" },
+  { key: "plantarflexors_knee_flex", label: "Plantarflexors (knee flex)" },
+  { key: "hamstrings",               label: "Hamstrings" },
+  { key: "hip_flexors",              label: "Hip flexors" },
+  { key: "hip_adductors",            label: "Hip adductors" },
+  { key: "quadriceps",               label: "Quadriceps" },
+  { key: "elbow_flexors",            label: "Elbow flexors" },
+  { key: "wrist_flexors",            label: "Wrist flexors" },
+];
+export const TARDIEU_QUALITY = [
+  { grade: 0, label: "No resistance" },
+  { grade: 1, label: "Slight, no catch" },
+  { grade: 2, label: "Clear catch then release" },
+  { grade: 3, label: "Fatigable clonus (<10s)" },
+  { grade: 4, label: "Infatigable clonus (>10s)" },
+  { grade: 5, label: "Joint immovable" },
+];
+
+/* Goniometry (§5.3) — per joint motion, per side. Alert on loss ≥5–10°. */
+export const GONIOMETRY_MOTIONS = [
+  { key: "ankle_df_knee_flexed",   label: "Ankle dorsiflexion (knee flexed)" },
+  { key: "ankle_df_knee_extended", label: "Ankle dorsiflexion (knee extended)" },
+  { key: "hip_extension",          label: "Hip extension" },
+  { key: "knee_extension",         label: "Knee extension / popliteal angle" },
+  { key: "hip_abduction",          label: "Hip abduction" },
+  { key: "shoulder_flexion",       label: "Shoulder flexion" },
+  { key: "shoulder_er",            label: "Shoulder external rotation" },
+];
+export const BODY_SIDES = [{ key: "left", label: "Left" }, { key: "right", label: "Right" }];
+
+/* Peak cough flow (§5.4) — bands to confirm with the treating team. */
+export const COUGH_FLOW_BANDS = [
+  { min: 270, label: "Adequate (>270)", alert: false },
+  { min: 160, label: "Impaired (160–270)", alert: false },
+  { min: 0,   label: "Ineffective (<160) — high risk", alert: true },
+];
+export const coughFlowBand = (v) => COUGH_FLOW_BANDS.find((b) => v >= b.min) || COUGH_FLOW_BANDS[COUGH_FLOW_BANDS.length - 1];
+
+/* TIS subscales (§5.5). */
+export const TIS_SUBSCALES = [
+  { key: "static",       label: "Static sitting", max: 7 },
+  { key: "dynamic",      label: "Dynamic sitting", max: 10 },
+  { key: "coordination", label: "Coordination", max: 6 },
+];
+export const GAS_LEVELS = [
+  { level: -2, label: "−2 much less than expected" },
+  { level: -1, label: "−1 less than expected" },
+  { level: 0,  label: "0 expected" },
+  { level: 1,  label: "+1 better than expected" },
+  { level: 2,  label: "+2 much better than expected" },
+];
+export const FSS_ITEMS = 9; // 1–7 each, stored as mean
+export const COGNITIVE_INSTRUMENTS = [
+  { key: "MoCA", label: "MoCA" },
+  { key: "ACE-III", label: "ACE-III" },
+  { key: "other", label: "Other" },
+];
+
 /* Session recall — the cognitive opening on any non-first session.
    Sessions aren't stored, so the facilitator confirms what was worked on
    last time (pre-filled from the schedule), then scores each item on this

@@ -105,6 +105,16 @@ export function Home({ bank, physioBank, readingBank, sessions, domain, setDomai
         </div>
       )}
 
+      {domain === "physio" && (
+        <div style={{ marginTop: 12 }}>
+          <TileBtn
+            onClick={() => go("assessment")}
+            title="Record an assessment"
+            sub="Clinical & periodic instruments"
+            foot="SATCo, Tardieu, goniometry, cough flow, TIS, GAS… — recorded, never administered" />
+        </div>
+      )}
+
       <div style={{ marginTop: 12 }}>
         <TileBtn
           onClick={() => go("dashboard")}
