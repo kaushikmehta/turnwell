@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { C, RECALL_RATINGS, emptyStateRatings, compactStateRatings } from "../../constants";
+import { C, RECALL_RATINGS, emptyStateRatings, compactStateRatings, emptyOpeningState } from "../../constants";
 import { SectionLabel } from "../shared";
 import { StateRatings } from "./StateRatings";
+import { OpeningState } from "./OpeningState";
 
 /* The recall step. The reference list was confirmed at setup — here it's only
    asked and scored, live, on the cue ladder. The middle rung (a category cue)
@@ -49,6 +50,7 @@ function Recall({ refDay, entries, setScore }) {
 export function Opening({ items, firstSession, recallRef, onNext }) {
   const [starId, setStarId] = useState(null);
   const [before, setBefore] = useState(emptyStateRatings);
+  const [state, setState] = useState(emptyOpeningState);
 
   const hasRecall = !firstSession && recallRef && recallRef.reference && recallRef.reference.length > 0;
   const [recallEntries, setRecallEntries] = useState(() =>
@@ -71,7 +73,7 @@ export function Opening({ items, firstSession, recallRef, onNext }) {
         recalled, total: recallEntries.length,
       };
     }
-    onNext({ star: { id: star.id, title: star.title }, before: b, recall });
+    onNext({ star: { id: star.id, title: star.title }, before: b, recall, state });
   };
 
   return (
@@ -82,6 +84,8 @@ export function Opening({ items, firstSession, recallRef, onNext }) {
       {hasRecall && (
         <Recall refDay={recallRef} entries={recallEntries} setScore={setScore} />
       )}
+
+      <OpeningState value={state} onChange={setState} />
 
       <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: C.sage, marginBottom: 5 }}>2. Orient</div>

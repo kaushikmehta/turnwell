@@ -16,6 +16,7 @@ export function PhysioSession({ config, home, persist, resume }) {
   const [priming, setPriming] = useState(resume?.priming ?? null);
   const [star, setStar] = useState(resume?.star ?? null);
   const [before, setBefore] = useState(resume?.before ?? null);
+  const [openingState, setOpeningState] = useState(resume?.openingState ?? null);
   const [recall, setRecall] = useState(resume?.recall ?? null);
   const [estimates, setEstimates] = useState(resume?.estimates ?? null);
   const [loopIndex, setLoopIndex] = useState(resume?.loopIndex ?? 0);
@@ -29,8 +30,8 @@ export function PhysioSession({ config, home, persist, resume }) {
   // session is in the database and the draft is cleared at that point.
   useEffect(() => {
     if (phase === "summary") return;
-    saveDraft("physio", { config, phase, priming, star, before, recall, estimates, loopIndex, results, closingData, stim });
-  }, [config, phase, priming, star, before, recall, estimates, loopIndex, results, closingData, stim]);
+    saveDraft("physio", { config, phase, priming, star, before, openingState, recall, estimates, loopIndex, results, closingData, stim });
+  }, [config, phase, priming, star, before, openingState, recall, estimates, loopIndex, results, closingData, stim]);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,7 +63,7 @@ export function PhysioSession({ config, home, persist, resume }) {
 
   const session = {
     at: Date.now(), items, firstSession: config.firstSession, readiness: config.readiness, priming,
-    star, before, recall, after: closingData ? closingData.after : null,
+    star, before, openingState, recall, after: closingData ? closingData.after : null,
     results, closing: closingData, stim,
   };
 
@@ -78,7 +79,7 @@ export function PhysioSession({ config, home, persist, resume }) {
 
       {phase === "opening" && (
         <Opening items={items} firstSession={config.firstSession} recallRef={config.recallRef}
-          onNext={({ star: s, before: b, recall: r }) => { setStar(s); setBefore(b); setRecall(r); setPhase("estimates"); }} />
+          onNext={({ star: s, before: b, recall: r, state: st }) => { setStar(s); setBefore(b); setRecall(r); setOpeningState(st); setPhase("estimates"); }} />
       )}
 
       {phase === "estimates" && (

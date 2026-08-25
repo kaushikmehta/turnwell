@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { C, INVOLVEMENT, GATE_RULE, unitLabel } from "../../constants";
+import { C, INVOLVEMENT, GATE_RULE, unitLabel, isDiscounted, discountReason } from "../../constants";
 import { buildPhysioReport } from "../../report";
 import { SectionLabel } from "../shared";
 
@@ -30,6 +30,14 @@ export function PhysioSummary({ session, onDone }) {
     <div className="tw-rise">
       <h2 className="tw-serif" style={{ fontSize: 30, margin: "6px 0 4px" }}>Session complete</h2>
       <p style={{ color: C.inkSoft, margin: "0 0 22px", fontSize: 15 }}>{total} exercises · {green}/{total} predictions matched. Review, then copy.</p>
+
+      {isDiscounted(session.openingState) && (
+        <div style={{ background: C.paper, border: `1.5px solid ${C.clay}`, borderRadius: 14, padding: "13px 16px", marginBottom: 16 }}>
+          <p style={{ fontSize: 13, color: C.clayDeep, margin: 0, fontWeight: 600, lineHeight: 1.45 }}>
+            Discounted session ({discountReason(session.openingState)}). It won't count toward the "3" gate, and a poor result won't break a streak — it'll show dimmed on the charts.
+          </p>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
         {bestLvl && (
