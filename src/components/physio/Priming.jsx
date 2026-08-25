@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { C, ROM_SEGMENTS } from "../../constants";
+import { C, ROM_SEGMENTS, TIGHTNESS_OPTIONS } from "../../constants";
 import { SectionLabel } from "../shared";
 import { Metronome } from "./Metronome";
 
@@ -11,16 +11,22 @@ import { Metronome } from "./Metronome";
 export function Priming({ onNext }) {
   const [romDone, setRomDone] = useState({});
   const [tight, setTight] = useState("");
+  // Per-segment tightness (handoff §4.1) — one tap per segment, feeding the
+  // contracture early-warning heatmap. { [segKey]: { level, note } }.
+  const [segTight, setSegTight] = useState({});
+  const [noteOpen, setNoteOpen] = useState({});
   const [ankle, setAnkle] = useState(null);
   const [splintHours, setSplintHours] = useState("");
   const [skinClear, setSkinClear] = useState(null);
 
   const toggleSeg = (k) => setRomDone((d) => ({ ...d, [k]: !d[k] }));
+  const setTightness = (k, level) => setSegTight((t) => ({ ...t, [k]: { ...(t[k] || {}), level } }));
+  const setSegNote = (k, note) => setSegTight((t) => ({ ...t, [k]: { ...(t[k] || {}), note } }));
   const doneCount = ROM_SEGMENTS.filter((s) => romDone[s.key]).length;
   const canContinue = ankle != null;
 
   const submit = () => onNext({
-    rom: { segments: romDone, tight: tight.trim() },
+    rom: { segments: romDone, tightness: segTight, tight: tight.trim() },
     ankle,
     splint: splintHours === "" ? null : { hours: Number(splintHours), skinClear },
   });
@@ -61,6 +67,30 @@ export function Priming({ onNext }) {
                   <span style={{ display: "block", fontSize: 12.5, color: C.inkSoft, marginTop: 3, lineHeight: 1.4 }}>{s.note}</span>
                 </span>
               </button>
+
+              {/* Per-segment tightness — one tap, feeds the contracture heatmap. */}
+              <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginLeft: 14, marginTop: -3 }}>
+                {TIGHTNESS_OPTIONS.map((t) => {
+                  const on = segTight[s.key]?.level === t.key;
+                  return (
+                    <button key={t.key} className="tw-focus" onClick={() => setTightness(s.key, t.key)}
+                      style={{ border: `1.5px solid ${on ? t.color : C.line}`, background: on ? t.tint : C.surface,
+                        color: on ? t.color : C.stone, borderRadius: 999, padding: "5px 11px", fontSize: 12, fontWeight: 700 }}>
+                      {t.label}
+                    </button>
+                  );
+                })}
+                <button className="tw-focus" onClick={() => setNoteOpen((o) => ({ ...o, [s.key]: !o[s.key] }))}
+                  style={{ border: "none", background: "none", color: C.stone, fontSize: 12, fontWeight: 600, padding: "5px 4px" }}>
+                  {noteOpen[s.key] ? "− note" : "+ note"}
+                </button>
+              </div>
+              {noteOpen[s.key] && (
+                <input value={segTight[s.key]?.note || ""} onChange={(e) => setSegNote(s.key, e.target.value)}
+                  placeholder={`Note on ${s.title.toLowerCase()}`} className="tw-focus tw-rise"
+                  style={{ marginLeft: 14, width: "calc(100% - 14px)", background: "#fff", border: `1px solid ${C.line}`,
+                    borderRadius: 10, padding: "8px 11px", fontSize: 13, color: C.ink }} />
+              )}
 
               {/* Ankle dorsiflexion range — sits directly under the ankle ROM segment it measures. */}
               {s.key === "ankles" && (

@@ -72,7 +72,8 @@ export function SessionDetail({ session }) {
                   {r.tick === "green" ? "✓ matched" : "✗ off"}
                 </span>
               </span>
-              {r.standing && <span>Standing {r.standing.minutes} min · {r.standing.quality}</span>}
+              {r.standing && <span>Standing {r.standing.minutes} min{r.standing.knee_position ? ` · ${r.standing.knee_position.replace(/_/g, " ")}` : r.standing.quality ? ` · ${r.standing.quality}` : ""}</span>}
+              {r.sitting && r.sitting.support_level != null && <span>Support {r.sitting.support_level}/8</span>}
               {r.namedExercise != null && <span>Named: {AWARE[r.namedExercise] || r.namedExercise}</span>}
               {r.understood != null && <span>Purpose: {AWARE[r.understood] || r.understood}</span>}
               {r.dualTask && <span style={{ color: C.indigo, fontWeight: 700 }}>dual-task</span>}
