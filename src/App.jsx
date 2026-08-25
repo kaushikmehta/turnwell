@@ -8,6 +8,7 @@ import { Home } from "./components/Home";
 import { Setup } from "./components/Setup";
 import { PhysioSetup } from "./components/PhysioSetup";
 import { PhysioSession } from "./components/physio/PhysioSession";
+import { Assessment } from "./components/physio/Assessment";
 import { ReadingSetup } from "./components/ReadingSetup";
 import { ReadingSession } from "./components/ReadingSession";
 import { Session } from "./components/Session";
@@ -174,6 +175,9 @@ export default function App() {
       {view === "reading" && readingConfig && (
         <ReadingSession passages={readingConfig} resume={resume} persist={(rec) => persistSession("reading", rec)}
           home={() => { setReadingConfig(null); setResume(null); setDraft(loadDraft()); setView("home"); }} />
+      )}
+      {view === "assessment" && (
+        <Assessment persist={(rec) => persistSession("physio", rec)} home={() => setView("home")} />
       )}
       {view === "run" && run && (
         <Session run={run} setRun={setRun} finish={finishRun}

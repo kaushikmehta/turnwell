@@ -29,7 +29,16 @@ export function toDomainSessions(rows, domain) {
     .sort((a, b) => a.at - b.at);
 }
 
-export const toPhysioSessions = (rows) => toDomainSessions(rows, "physio");
+// Physio training sessions only — assessment rows (payload.kind === 'assessment')
+// live in the same table/domain but are surfaced separately, not as session cards.
+export const toPhysioSessions = (rows) =>
+  toDomainSessions(rows, "physio").filter((s) => (s.payload?.kind ?? "session") !== "assessment");
+
+// The recorded clinical/periodic instruments, newest first.
+export const toPhysioAssessments = (rows) =>
+  toDomainSessions(rows, "physio")
+    .filter((s) => s.payload?.kind === "assessment")
+    .sort((a, b) => b.at - a.at);
 
 // Per-session metrics for the cue-ladder domains (speech, reading). Both score
 // 0 (independent) … 4 (not yet), so independence % and average support are
