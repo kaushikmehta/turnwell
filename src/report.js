@@ -4,7 +4,7 @@
  * written to be read by a human (the coordinator, later you), not parsed by a script.
  */
 import { ratingByKey, supportWord, isDeck, isScene } from "./utils";
-import { READING_RATINGS, RECALL_RATINGS, READINESS_STEPS, ROM_SEGMENTS, STATE_METRICS, unitLabel } from "./constants";
+import { READING_RATINGS, RECALL_RATINGS, READINESS_STEPS, ROM_SEGMENTS, STATE_METRICS, unitLabel, supportLabel, skinCheckAlerts } from "./constants";
 
 const understandWord = { yes: "yes", partly: "partly", no: "no" };
 
@@ -104,6 +104,9 @@ const fadeWord = {
 const ankleWord = {
   neutral: "reaches neutral", tight: "tight, short of neutral", lost: "not close to neutral",
 };
+const probeWord = {
+  nothing: "nothing detected", flicker: "flicker under the hand", movement: "visible movement",
+};
 
 const recallWord = Object.fromEntries(RECALL_RATINGS.map((r) => [r.key, r.label.toLowerCase()]));
 
@@ -157,6 +160,14 @@ export function buildPhysioReport(session, patientName = "Akki") {
       const covered = ROM_SEGMENTS.filter((s) => priming.rom.segments && priming.rom.segments[s.key]).map((s) => s.title.toLowerCase());
       const missed = ROM_SEGMENTS.filter((s) => !(priming.rom.segments && priming.rom.segments[s.key])).map((s) => s.title.toLowerCase());
       lines.push(`ROM covered: ${covered.length ? covered.join(", ") : "none"}${missed.length ? ` (not done: ${missed.join(", ")})` : ""}.`);
+      const tightFlags = ROM_SEGMENTS
+        .filter((s) => priming.rom.tightness && priming.rom.tightness[s.key] && priming.rom.tightness[s.key].level && priming.rom.tightness[s.key].level !== "normal")
+        .map((s) => {
+          const t = priming.rom.tightness[s.key];
+          const word = t.level === "catch_felt" ? "catch felt" : "tighter than usual";
+          return `${s.title.toLowerCase()} (${word}${t.note ? `: ${t.note}` : ""})`;
+        });
+      if (tightFlags.length) lines.push(`   Tightness flagged: ${tightFlags.join(", ")}.`);
       if (priming.rom.tight) lines.push(`   Tight/restricted today: ${priming.rom.tight}`);
     }
     lines.push(`Ankle ${ankleWord[priming.ankle] || priming.ankle}.` +
@@ -187,8 +198,24 @@ export function buildPhysioReport(session, patientName = "Akki") {
     if (r.estRevised && r.estOriginal) {
       lines.push(`   (revised before starting — from ${r.estOriginal.estReps} ${unit} / ${r.estOriginal.estDiff}/10)`);
     }
-    lines.push(`   INVOLVEMENT: ${involveWord[r.involvement] ?? r.involvement}`);
-    if (r.standing) lines.push(`   Standing: ${r.standing.minutes} min — ${r.standing.quality === "held" ? "quality held" : r.standing.quality === "faded" ? "faded near the end" : "degraded, stopped early"}`);
+    if (typeof r.involvement === "number") lines.push(`   INVOLVEMENT: ${involveWord[r.involvement] ?? r.involvement}`);
+    else if (r.probe) lines.push(`   PROBE: ${probeWord[r.probe.outcome] || r.probe.outcome}`);
+    else lines.push(`   SUBSTRATE — dose logged, not involvement-scored`);
+    if (r.sitting && r.sitting.support_level != null) {
+      lines.push(`   Support level: ${r.sitting.support_level}/8 (${supportLabel(r.sitting.support_level)})` +
+        (r.sitting.longest_hold_seconds != null ? `, longest hold ${r.sitting.longest_hold_seconds}s` : "") + " " +
+        (r.sitting.surface ? `, ${r.sitting.surface.replace(/_/g, " ")}` : ""));
+    }
+    if (r.rolling && r.rolling.pattern) lines.push(`   Roll: ${r.rolling.pattern.replace(/_/g, " ")}${r.rolling.direction ? ` (${r.rolling.direction})` : ""}`);
+    if (r.pnf && r.pnf.pattern) lines.push(`   PNF: ${r.pnf.pattern.replace(/_/g, " ")}${r.pnf.phase ? ` — ${r.pnf.phase.replace(/_/g, " ")}` : ""}`);
+    if (r.standing) {
+      lines.push(`   Standing: ${r.standing.minutes} min — knees ${(r.standing.knee_position || "").replace(/_/g, " ")}, ` +
+        `leg loading ${(r.standing.leg_loading || "").replace(/_/g, " ")}` +
+        (r.standing.weight_bearing_pct != null ? `, ${r.standing.weight_bearing_pct}% weight-bearing` : ""));
+      lines.push(`      Skin: ${(r.standing.saddle_skin_check || "").replace(/_/g, " ")}` +
+        (skinCheckAlerts(r.standing.saddle_skin_check) ? " ** ALERT — contact care team, standing progression blocked **" : "") +
+        `. Ended: ${(r.standing.tolerance_end_reason || "").replace(/_/g, " ")}.`);
+    }
     if (r.namedExercise != null) lines.push(`   Named the exercise: ${understandWord[r.namedExercise] || r.namedExercise}`);
     if (r.namedResponse) lines.push(`      He said: "${r.namedResponse}"`);
     if (r.understood != null) lines.push(`   Said what it helps with (daily living): ${understandWord[r.understood] || r.understood}`);

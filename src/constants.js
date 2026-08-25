@@ -230,17 +230,10 @@ export const FADE_OUTCOMES = [
   { key: "held",     label: "Held it" },
 ];
 
-/* Standing quality — the limiter now that orthostatic risk has resolved.
-   DEPRECATED (handoff §4.3): replaced by the concrete STANDING_DOSE fields
-   below. Kept only until the ExerciseLoop rework consumes the replacement. */
-export const STANDING_QUALITY = [
-  { key: "held",     label: "Quality held" },
-  { key: "faded",    label: "Faded near the end" },
-  { key: "degraded", label: "Degraded — stopped early" },
-];
-
 /* ================================================================
    STANDING DOSE (handoff §4.3) — replaces the vague quality rating.
+   (The old STANDING_QUALITY scale was removed; old sessions that stored
+   standing.quality still render — report.js / SessionDetail handle both.)
    A TRAM stand can become suspension (load in the walking saddle, knees
    flexed) while minutes still trend up, so record what actually loaded.
    ================================================================ */

@@ -106,8 +106,11 @@ export function exerciseRows(payload) {
     actDiff: r.actDiff,
     estDiff: r.estDiff,
     tick: r.tick, // "green" | "yellow"
+    category: r.category || "active_training",
     involvement: typeof r.involvement === "number" ? r.involvement : null,
+    probe: r.probe || null,
     standing: r.standing || null,
+    sitting: r.sitting || null,
     namedExercise: r.namedExercise ?? null,
     understood: r.understood ?? null,
     dualTask: !!r.dualTask,
