@@ -4,7 +4,7 @@
  * recall, ankle/ROM, closing) and the before→after state slopes.
  */
 import React from "react";
-import { C } from "../../constants";
+import { C, isDiscounted, discountReason } from "../../constants";
 import { StateSlopes } from "./charts";
 import { exerciseRows, stateDeltas, involvementColor, involvementLabel, fmtDateLong, INVOLVEMENT_GATE } from "./metrics";
 
@@ -42,6 +42,12 @@ export function SessionDetail({ session }) {
         <h3 className="tw-serif" style={{ fontSize: 22, margin: 0 }}>{fmtDateLong(session.at)}</h3>
         {p.star?.title && <span style={{ fontSize: 12.5, color: C.clayDeep, fontWeight: 700 }}>★ Star: {p.star.title}</span>}
       </div>
+
+      {isDiscounted(p.openingState) && (
+        <div style={{ background: C.paper, border: `1.5px solid ${C.clay}`, borderRadius: 12, padding: "10px 13px", marginBottom: 12 }}>
+          <span style={{ fontSize: 12.5, color: C.clayDeep, fontWeight: 700 }}>Discounted session · {discountReason(p.openingState)} — excluded from the progression gate.</span>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 14, background: C.surface, border: `1px solid ${C.line}`, borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
         <Stat label="Exercises" value={rows.length} />

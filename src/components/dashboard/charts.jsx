@@ -123,8 +123,104 @@ export function LineTrend({ title, hint, data, yMax, yMin = 0, ticks, suffix = "
   );
 }
 
+// ---- Multi-series line trend ----
+// slots: ordered [{ id, at }] shared x-axis. series: [{ key, label, color,
+// dashed?, stepped?, values: { [slotId]: y|null } }]. dimIds: Set of slot ids
+// rendered faint (discounted sessions). Missing/null values are gaps.
+export function MultiLineTrend({ title, hint, slots, series, yMax, yMin = 0, ticks, suffix = "", refLine, selectedId, onSelect, dimIds }) {
+  const [ref, w] = useWidth();
+  const { xAt, yAt } = usePlot(w, slots, yMax, yMin);
+  const dim = dimIds || new Set();
+
+  const pathFor = (s) => {
+    let d = "";
+    let started = false;
+    slots.forEach((slot, i) => {
+      const v = s.values[slot.id];
+      if (v == null) { started = false; return; }
+      const x = xAt(i), y = yAt(v);
+      if (!started) { d += `M${x.toFixed(1)},${y.toFixed(1)}`; started = true; }
+      else if (s.stepped) { d += ` H${x.toFixed(1)} V${y.toFixed(1)}`; }
+      else { d += ` L${x.toFixed(1)},${y.toFixed(1)}`; }
+    });
+    return d;
+  };
+
+  return (
+    <ChartFrame title={title} hint={hint}>
+      <div ref={ref} style={{ width: "100%" }}>
+        {w > 0 && (
+          <svg width={w} height={H} role="img" aria-label={title}>
+            <Gridlines w={w} ticks={ticks} yAt={yAt} suffix={suffix} />
+            {refLine && <RefLine w={w} y={refLine.y} yAt={yAt} label={refLine.label} color={refLine.color} />}
+            {series.map((s) => (
+              <path key={s.key} d={pathFor(s)} fill="none" stroke={s.color} strokeWidth={2}
+                strokeDasharray={s.dashed ? "5 4" : undefined} strokeLinejoin="round" strokeLinecap="round" opacity={0.65} />
+            ))}
+            {series.map((s) => slots.map((slot, i) => {
+              const v = s.values[slot.id];
+              if (v == null) return null;
+              const faint = dim.has(slot.id);
+              const sel = slot.id === selectedId;
+              return (
+                <g key={s.key + slot.id} onClick={() => onSelect?.(slot.id)} style={{ cursor: onSelect ? "pointer" : "default" }}>
+                  <circle cx={xAt(i)} cy={yAt(v)} r={sel ? 6 : 4} fill={s.color} stroke={C.surface} strokeWidth={1.5} opacity={faint ? 0.3 : 1} />
+                </g>
+              );
+            }))}
+            <XLabels data={slots} xFn={xAt} selectedId={selectedId} />
+          </svg>
+        )}
+      </div>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", margin: "6px 0 2px" }}>
+        {series.map((s) => (
+          <span key={s.key} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: C.inkSoft }}>
+            <span style={{ width: 14, height: 0, borderTop: `2px ${s.dashed ? "dashed" : "solid"} ${s.color}` }} />{s.label}
+          </span>
+        ))}
+      </div>
+    </ChartFrame>
+  );
+}
+
+// ---- Heatmap (segment × session) ----
+// rows: [{ key, label }]. cols: [{ id, at }]. cell(rowKey, col) -> { color, title } | null.
+export function Heatmap({ title, hint, rows, cols, cell, onSelect, selectedId }) {
+  if (!cols.length) {
+    return <ChartFrame title={title} hint={hint}><div style={{ height: 50, display: "grid", placeItems: "center", color: C.stone, fontSize: 12 }}>No data yet</div></ChartFrame>;
+  }
+  const shown = cols.length > 14 ? cols.slice(cols.length - 14) : cols;
+  return (
+    <ChartFrame title={title} hint={hint}>
+      <div style={{ overflowX: "auto", marginTop: 6 }}>
+        <div style={{ display: "grid", gridTemplateColumns: `78px repeat(${shown.length}, 1fr)`, gap: 3, minWidth: shown.length * 22 + 78 }}>
+          <div />
+          {shown.map((c) => (
+            <div key={c.id} style={{ fontSize: 8.5, color: c.id === selectedId ? C.ink : C.stone, textAlign: "center", transform: "rotate(-45deg)", transformOrigin: "center", height: 26, overflow: "visible", whiteSpace: "nowrap" }}>
+              {fmtDate(c.at)}
+            </div>
+          ))}
+          {rows.map((r) => (
+            <React.Fragment key={r.key}>
+              <div style={{ fontSize: 11, color: C.ink, fontWeight: 600, display: "flex", alignItems: "center" }}>{r.label}</div>
+              {shown.map((c) => {
+                const cc = cell(r.key, c);
+                return (
+                  <div key={c.id} title={cc?.title || ""} onClick={() => onSelect?.(c.id)}
+                    style={{ height: 20, borderRadius: 4, background: cc?.color || C.paper, cursor: onSelect ? "pointer" : "default",
+                      border: c.id === selectedId ? `1.5px solid ${C.ink}` : "none" }} />
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    </ChartFrame>
+  );
+}
+
 // ---- Bar trend (standing minutes) ----
-export function BarTrend({ title, hint, data, yMax, ticks, suffix = "", color = C.sage, ceiling, selectedId, onSelect }) {
+export function BarTrend({ title, hint, data, yMax, ticks, suffix = "", color = C.sage, ceiling, selectedId, onSelect, colorFor }) {
   const [ref, w] = useWidth();
   const { plotW, bandAt, yAt } = usePlot(w, data, yMax, 0);
   const bw = Math.min(30, (plotW / Math.max(1, data.length)) * 0.55);
@@ -144,7 +240,7 @@ export function BarTrend({ title, hint, data, yMax, ticks, suffix = "", color = 
               return (
                 <g key={d.id} onClick={() => onSelect?.(d.id)} style={{ cursor: "pointer" }}>
                   <rect x={bandAt(i) - Math.max(bw, 22) / 2} y={M.t} width={Math.max(bw, 22)} height={H - M.t - M.b} fill="transparent" />
-                  <rect x={x} y={y} width={bw} height={h} rx={4} fill={color} opacity={sel ? 1 : 0.45} />
+                  <rect x={x} y={y} width={bw} height={h} rx={4} fill={(colorFor && colorFor(d)) || color} opacity={sel ? 1 : 0.45} />
                   {sel && <text x={bandAt(i)} y={y - 6} textAnchor="middle" fontSize={11} fontWeight={700} fill={C.ink}>{d.y}{suffix}</text>}
                 </g>
               );
