@@ -556,15 +556,45 @@ export const RECALL_RATINGS = [
    an attendant drifting toward the easy and familiar and away from
    loading once the novelty wears off.
    ================================================================ */
+/* Revised day templates (handoff §9.6). Two emphases — trunk (Mon/Wed/Fri,
+   full_body montage) and loading & probes (Tue/Thu, lower_body) — with ids in
+   one-way position-flow order: sidelying → sitting → standing → wind-down.
+   `montage` is the xStep emphasis for the day; `ids` stays flat for the recall
+   reference and the setup pre-select. */
 export const DAY_PLAN = {
-  1: { label: "Monday · loading",      ids: ["seated-perturbation", "tram-weight-bearing", "extensor-probe", "tram-arm-drive"] },
-  2: { label: "Tuesday · trunk",       ids: ["seated-perturbation", "tram-weight-bearing", "extensor-probe", "seated-reach-limits"] },
-  3: { label: "Wednesday · probe day", ids: ["seated-perturbation", "tram-weight-bearing", "extensor-probe", "knee-extension-probe"] },
-  4: { label: "Thursday · reach",      ids: ["seated-weight-shift-beat", "tram-weight-bearing", "extensor-probe", "cross-midline-reach"] },
-  5: { label: "Friday · sit-to-stand", ids: ["seated-perturbation", "tram-weight-bearing", "tram-sit-to-stand", "extensor-probe"] },
-  6: { label: "Saturday · caregiver",  ids: ["sitting-tolerance", "real-object-task", "cross-midline-reach"] },
+  1: { label: "Monday · trunk",   montage: "full_body",  ids: ["segmental-rolling", "come-to-sit", "rhythmic-stabilisation", "pnf-chop-lift", "tram-weight-bearing", "bridging"] },
+  2: { label: "Tuesday · loading & probes", montage: "lower_body", ids: ["segmental-rolling", "knee-extension-probe", "come-to-sit", "seated-perturbation", "tram-weight-bearing", "bridging"] },
+  3: { label: "Wednesday · trunk", montage: "full_body", ids: ["segmental-rolling", "come-to-sit", "rhythmic-stabilisation", "forward-lean-table", "tram-weight-bearing", "bridging"] },
+  4: { label: "Thursday · loading & probes", montage: "lower_body", ids: ["segmental-rolling", "knee-extension-probe", "come-to-sit", "side-sitting-prop", "tram-weight-bearing", "bridging"] },
+  5: { label: "Friday · trunk",   montage: "full_body",  ids: ["segmental-rolling", "come-to-sit", "rhythmic-stabilisation", "pnf-chop-lift", "tram-sit-to-stand", "tram-weight-bearing", "bridging"] },
+  6: { label: "Saturday · caregiver", ids: ["sitting-tolerance", "real-object-task", "cross-midline-reach"] },
   0: { label: "Sunday · rest day",     ids: [] },
 };
+
+/* Position-flow validation (handoff §9.1). Given the ordered selected items,
+   return an array of human-readable problems (empty = valid):
+     1. demand items (active_training / probe) run non-decreasing in position;
+     2. the wind-down block carries substrate only. */
+export function validatePositionFlow(items) {
+  const problems = [];
+  let maxSeen = -1;
+  let maxTitle = "";
+  items.forEach((ex) => {
+    const cat = (ex.category) || "active_training";
+    const ord = positionOrder(ex.position_block);
+    if (ex.position_block === "wind_down" && cat !== "substrate") {
+      problems.push(`"${ex.title}" is in the wind-down but isn't substrate — wind-down is fatigue-indifferent items only.`);
+    }
+    // Demand items must not step backwards in position.
+    if (cat !== "substrate") {
+      if (ord < maxSeen) {
+        problems.push(`"${ex.title}" (${ex.position_block}) comes after ${maxTitle} — demand should run supine → sitting → standing.`);
+      }
+      if (ord >= maxSeen) { maxSeen = ord; maxTitle = `"${ex.title}"`; }
+    }
+  });
+  return problems;
+}
 
 /* The recall reference. With no session storage, we approximate "last
    session" from the schedule: the most recent weekday (Mon–Fri) with a plan,

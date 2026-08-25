@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { C, MINUTES_PER_EXERCISE, DAY_PLAN, READINESS_STEPS, previousTrainingDay } from "../constants";
+import { C, MINUTES_PER_EXERCISE, DAY_PLAN, READINESS_STEPS, previousTrainingDay,
+  validatePositionFlow, positionOrder, categoryOf, montageLabel } from "../constants";
 import { BackBtn, SectionLabel, Field, inputStyle } from "./shared";
 
 let customIdSeq = 0;
@@ -81,6 +82,18 @@ export function PhysioSetup({ physioBank, start, back }) {
     setSelected(next);
   };
 
+  // Sort into the one-way postural sequence: by position block, then block_order.
+  const autoOrder = () => {
+    const next = [...selected].sort((a, b) => {
+      const pa = positionOrder(a.position_block), pb = positionOrder(b.position_block);
+      if (pa !== pb) return pa - pb;
+      return (a.block_order ?? 99) - (b.block_order ?? 99);
+    });
+    setSelected(next);
+  };
+
+  const flowProblems = validatePositionFlow(selected);
+
   const count = selected.length;
   const estMinutes = count * MINUTES_PER_EXERCISE;
   const overCount = count > 4;
@@ -149,7 +162,9 @@ export function PhysioSetup({ physioBank, start, back }) {
           style={{ width: "100%", textAlign: "left", background: C.sage, color: "#fff", border: "none",
             borderRadius: 16, padding: "16px 18px", marginBottom: 20, boxShadow: `0 3px 0 ${C.sageDeep}` }}>
           <div style={{ fontSize: 16, fontWeight: 700 }}>Today's session · {today.label}</div>
-          <div style={{ fontSize: 12.5, opacity: .9, marginTop: 3 }}>Pre-selects the day's exercises — review and adjust below</div>
+          <div style={{ fontSize: 12.5, opacity: .9, marginTop: 3 }}>
+            Pre-selects the day's exercises in position-flow order{today.montage ? ` · xStep ${montageLabel(today.montage)}` : ""} — review and adjust below
+          </div>
         </button>
       )}
 
@@ -298,7 +313,22 @@ export function PhysioSetup({ physioBank, start, back }) {
 
       {selected.length > 1 && (
         <>
-          <SectionLabel>Session order</SectionLabel>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <SectionLabel>Session order · position flow</SectionLabel>
+            <button className="tw-focus" onClick={autoOrder}
+              style={{ background: "none", border: `1.5px solid ${C.sage}`, color: C.sageDeep, borderRadius: 10, padding: "6px 12px", fontSize: 12.5, fontWeight: 700, marginBottom: 11 }}>
+              Auto-order ↓
+            </button>
+          </div>
+          {flowProblems.length > 0 && (
+            <div style={{ background: "#F6E7E7", border: `1.5px solid #B15353`, borderRadius: 12, padding: "11px 14px", marginBottom: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#8C3A3A", marginBottom: 5 }}>Position flow needs a look</div>
+              {flowProblems.map((p, i) => (
+                <p key={i} style={{ fontSize: 12, color: "#8C3A3A", margin: i ? "4px 0 0" : 0, lineHeight: 1.4 }}>· {p}</p>
+              ))}
+              <p style={{ fontSize: 11.5, color: "#8C3A3A", margin: "6px 0 0", opacity: .85 }}>Demand runs supine → sitting → standing; the wind-down carries substrate only. Tap Auto-order to fix.</p>
+            </div>
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
             {selected.map((ex, i) => (
               <div key={ex.id} style={{ display: "flex", alignItems: "center", gap: 10,
@@ -306,6 +336,9 @@ export function PhysioSetup({ physioBank, start, back }) {
                 <span style={{ fontSize: 12.5, color: i >= 4 ? "#8C3A3A" : C.stone, fontWeight: 700, width: 16 }}>{i + 1}</span>
                 <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: C.ink }}>
                   {ex.title}
+                  <span style={{ display: "block", fontSize: 11, color: C.stone, fontWeight: 600, marginTop: 1 }}>
+                    {(ex.position_block || "—").replace(/_/g, " ")} · {categoryOf(ex).replace(/_/g, " ")}
+                  </span>
                   {i >= 4 && <span style={{ display: "block", fontSize: 11, color: "#8C3A3A", fontWeight: 700 }}>Over the 4-exercise guideline</span>}
                 </span>
                 <button className="tw-focus" disabled={i === 0} onClick={() => moveSelected(i, -1)}
