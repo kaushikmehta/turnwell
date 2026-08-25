@@ -47,7 +47,7 @@ const DOMAIN_LABEL = { speech: "Speech", physio: "Physio / OT", reading: "Readin
 export function draftSummary(draft) {
   if (!draft) return null;
   const { domain, state, startedAt } = draft;
-  const n = state?.results?.length ?? 0;
+  const n = Array.isArray(state?.results) ? state.results.filter(Boolean).length : 0;
   let detail;
   if (domain === "speech") detail = `${n} answered`;
   else if (domain === "physio") {

@@ -93,6 +93,50 @@ export function PhysioOverview({ rows, onOpen }) {
 
   return (
     <>
+      {/* Assessments — recorded instruments, up top and openable */}
+      {assessments.length > 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px", color: C.ink }}>
+            Assessments <span style={{ color: C.stone, fontWeight: 600 }}>· {assessments.length}</span>
+          </h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 10 }}>
+            {assessments.map((a) => {
+              const meta = ASSESSMENT_TYPES.find((t) => t.key === a.payload.assessment_type);
+              return (
+                <button key={a.id} className="tw-focus tw-lift" onClick={() => onOpen(a)}
+                  style={{ textAlign: "left", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "11px 13px", cursor: "pointer" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{meta?.label || a.payload.assessment_type}</span>
+                    <span style={{ color: C.stone, fontSize: 16, lineHeight: 1 }}>›</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: C.stone, marginTop: 2 }}>{fmtDate(a.at)}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Tardieu R1/R2 — from assessments, shown even without training sessions */}
+      {tardieu.length > 0 && (
+        <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "14px 16px", marginBottom: 24 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink }}>Tardieu — R1 / R2 (latest)</div>
+          <div style={{ fontSize: 11.5, color: C.stone, marginBottom: 10 }}>The R2−R1 gap is the clinically meaningful object · falling R2 = contracture forming</div>
+          {tardieu.map((r, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: i < tardieu.length - 1 ? `1px solid ${C.line}` : "none" }}>
+              <span style={{ fontSize: 13, color: C.ink }}>{r.muscleLabel} · {r.side}</span>
+              <span style={{ fontSize: 12.5, color: C.inkSoft }}>
+                R1 {r.r1_degrees}° · R2 {r.r2_degrees}° · <strong style={{ color: C.sageDeep }}>Δ{r.gap}°</strong> · Q{r.quality_grade}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {sessions.length === 0 ? (
+        <p style={{ color: C.stone, marginBottom: 8 }}>No training sessions yet — run one and the trend charts will appear here.</p>
+      ) : (
+      <>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 12, marginBottom: 26 }}>
         {primarySlots.length > 0 && (
           <MultiLineTrend
@@ -153,51 +197,13 @@ export function PhysioOverview({ rows, onOpen }) {
         )}
       </div>
 
-      {/* Tardieu R1/R2 */}
-      {tardieu.length > 0 && (
-        <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "14px 16px", marginBottom: 22 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink }}>Tardieu — R1 / R2 (latest)</div>
-          <div style={{ fontSize: 11.5, color: C.stone, marginBottom: 10 }}>The R2−R1 gap is the clinically meaningful object · falling R2 = contracture forming</div>
-          {tardieu.map((r, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: i < tardieu.length - 1 ? `1px solid ${C.line}` : "none" }}>
-              <span style={{ fontSize: 13, color: C.ink }}>{r.muscleLabel} · {r.side}</span>
-              <span style={{ fontSize: 12.5, color: C.inkSoft }}>
-                R1 {r.r1_degrees}° · R2 {r.r2_degrees}° · <strong style={{ color: C.sageDeep }}>Δ{r.gap}°</strong> · Q{r.quality_grade}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Assessments list */}
-      {assessments.length > 0 && (
-        <div style={{ marginBottom: 22 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px", color: C.ink }}>
-            Assessments <span style={{ color: C.stone, fontWeight: 600 }}>· {assessments.length}</span>
-          </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 10 }}>
-            {assessments.map((a) => {
-              const meta = ASSESSMENT_TYPES.find((t) => t.key === a.payload.assessment_type);
-              return (
-                <div key={a.id} style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "11px 13px" }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{meta?.label || a.payload.assessment_type}</div>
-                  <div style={{ fontSize: 12, color: C.stone, marginTop: 2 }}>{fmtDate(a.at)}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {sessions.length > 0 && (
-        <>
-          <h3 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px", color: C.ink }}>
-            Sessions <span style={{ color: C.stone, fontWeight: 600 }}>· {cards.length}</span>
-          </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 10 }}>
-            {cards.map((m) => <SessionCard key={m.id} m={m} session={byId[m.id]} onOpen={onOpen} />)}
-          </div>
-        </>
+      <h3 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px", color: C.ink }}>
+        Sessions <span style={{ color: C.stone, fontWeight: 600 }}>· {cards.length}</span>
+      </h3>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 10 }}>
+        {cards.map((m) => <SessionCard key={m.id} m={m} session={byId[m.id]} onOpen={onOpen} />)}
+      </div>
+      </>
       )}
     </>
   );

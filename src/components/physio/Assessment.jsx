@@ -5,6 +5,7 @@ import {
   coughFlowBand, TIS_SUBSCALES, GAS_LEVELS, FSS_ITEMS, COGNITIVE_INSTRUMENTS,
 } from "../../constants";
 import { BackBtn, SectionLabel } from "../shared";
+import { summarizeAssessment } from "./assessmentSummary";
 
 /* Assessment recording (handoff §5). The app records scores administered by
    the clinician — it never presents test items. One picker, then a per-type
@@ -357,10 +358,15 @@ const FORMS = {
 
 export function Assessment({ persist, home }) {
   const [type, setType] = useState(null);
+  const [pending, setPending] = useState(null); // collected data awaiting review
   const [saved, setSaved] = useState(false);
 
-  const save = (data) => {
-    persist?.({ at: Date.now(), kind: "assessment", assessment_type: type, ...data });
+  // Form calls this — hold the data for review rather than persisting straight away.
+  const review = (data) => setPending(data);
+
+  const confirmSave = () => {
+    persist?.({ at: Date.now(), kind: "assessment", assessment_type: type, ...pending });
+    setPending(null);
     setSaved(true);
   };
 
@@ -376,6 +382,36 @@ export function Assessment({ persist, home }) {
     );
   }
 
+  if (pending) {
+    const summary = summarizeAssessment({ assessment_type: type, ...pending });
+    return (
+      <div className="tw-rise">
+        <BackBtn onClick={() => setPending(null)} label="Back to edit" />
+        <h2 className="tw-serif" style={{ fontSize: 26, margin: "10px 0 2px" }}>Review · {summary.title}</h2>
+        <p style={{ color: C.inkSoft, fontSize: 13.5, margin: "0 0 18px" }}>Check this before saving. Nothing is stored until you submit.</p>
+        <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "8px 18px", marginBottom: 16 }}>
+          {summary.lines.length === 0 && <p style={{ fontSize: 13.5, color: C.stone, padding: "10px 0" }}>No fields captured.</p>}
+          {summary.lines.map((l, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderBottom: i < summary.lines.length - 1 ? `1px solid ${C.line}` : "none" }}>
+              <span style={{ fontSize: 13, color: C.inkSoft, textTransform: "capitalize" }}>{l.label}</span>
+              <span style={{ fontSize: 13.5, color: C.ink, fontWeight: 600, textAlign: "right" }}>{l.value}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button className="tw-focus" onClick={() => setPending(null)}
+            style={{ flex: 1, background: C.surface, border: `1.5px solid ${C.line}`, color: C.inkSoft, borderRadius: 14, padding: "15px", fontSize: 15, fontWeight: 700 }}>
+            Edit
+          </button>
+          <button className="tw-focus tw-lift" onClick={confirmSave}
+            style={{ flex: 2, background: C.clay, color: "#fff", border: "none", borderRadius: 14, padding: "15px", fontSize: 16, fontWeight: 700, boxShadow: `0 3px 0 ${C.clayDeep}` }}>
+            Submit
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (type) {
     const meta = ASSESSMENT_TYPES.find((t) => t.key === type);
     const Form = FORMS[type];
@@ -384,7 +420,7 @@ export function Assessment({ persist, home }) {
         <BackBtn onClick={() => setType(null)} label="Assessments" />
         <h2 className="tw-serif" style={{ fontSize: 26, margin: "10px 0 2px" }}>{meta.label}</h2>
         <p style={{ color: C.inkSoft, fontSize: 13.5, margin: "0 0 18px" }}>{meta.cadence} · {meta.blurb}</p>
-        <Form onSave={save} />
+        <Form onSave={review} />
       </div>
     );
   }

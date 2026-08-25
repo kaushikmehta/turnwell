@@ -20,7 +20,17 @@ export function PhysioSession({ config, home, persist, resume }) {
   const [recall, setRecall] = useState(resume?.recall ?? null);
   const [estimates, setEstimates] = useState(resume?.estimates ?? null);
   const [loopIndex, setLoopIndex] = useState(resume?.loopIndex ?? 0);
-  const [results, setResults] = useState(resume?.results ?? []);
+  // Results are aligned to the items array by index (a null = not yet done), so
+  // the facilitator can jump back to a previous exercise and re-edit it.
+  const [results, setResults] = useState(() => {
+    const base = Array((config.items || []).length).fill(null);
+    (resume?.results || []).forEach((r) => {
+      if (!r) return;
+      const idx = (config.items || []).findIndex((it) => it.id === r.id);
+      if (idx >= 0) base[idx] = r;
+    });
+    return base;
+  });
   const [closingData, setClosingData] = useState(resume?.closingData ?? null);
   const [stim, setStim] = useState(resume?.stim ?? emptyStim());
   const wakeLockRef = useRef(null);
@@ -53,18 +63,25 @@ export function PhysioSession({ config, home, persist, resume }) {
   const total = items.length;
 
   const finishExercise = (entry) => {
-    const nextResults = [...results, entry];
+    const nextResults = [...results];
+    nextResults[loopIndex] = entry;
     setResults(nextResults);
-    if (loopIndex + 1 >= total) setPhase("closing");
-    else setLoopIndex(loopIndex + 1);
+    // Advance to the first still-incomplete exercise; if none remain, close.
+    const nextIncomplete = nextResults.findIndex((r) => r == null);
+    if (nextIncomplete === -1) setPhase("closing");
+    else setLoopIndex(nextIncomplete);
   };
 
+  const jumpTo = (i) => { if (i >= 0 && i < total) setLoopIndex(i); };
+  const doneFlags = results.map((r) => r != null);
+  // Allow finishing the session once at least one exercise is done.
   const endEarly = () => setPhase("closing");
+  const goToClosing = () => setPhase("closing");
 
   const session = {
     at: Date.now(), items, firstSession: config.firstSession, readiness: config.readiness, priming,
     star, before, openingState, recall, after: closingData ? closingData.after : null,
-    results, closing: closingData, stim,
+    results: results.filter(Boolean), closing: closingData, stim,
   };
 
   const currentExerciseId = phase === "loop" && items[loopIndex] ? items[loopIndex].id : null;
@@ -88,7 +105,9 @@ export function PhysioSession({ config, home, persist, resume }) {
 
       {phase === "loop" && estimates && (
         <ExerciseLoop key={items[loopIndex].id} item={items[loopIndex]} index={loopIndex} total={total}
-          estimate={estimates[items[loopIndex].id]} stimStamp={stimStampOf(stim)} onFinish={finishExercise} onEndEarly={endEarly} />
+          items={items} done={doneFlags} existing={results[loopIndex]}
+          estimate={estimates[items[loopIndex].id]} stimStamp={stimStampOf(stim)}
+          onFinish={finishExercise} onJump={jumpTo} onDone={goToClosing} onEndEarly={endEarly} />
       )}
 
       {phase === "closing" && (

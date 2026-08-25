@@ -12,6 +12,7 @@ import { BackBtn, Empty } from "../shared";
 import { PhysioOverview } from "./PhysioDashboard";
 import { LanguageOverview, LanguageDetail } from "./LanguageDashboard";
 import { SessionDetail } from "./SessionDetail";
+import { AssessmentDetail } from "./AssessmentDetail";
 
 const DOMAINS = [
   { key: "physio", label: "Physio", color: C.clay },
@@ -67,7 +68,9 @@ export function Dashboard({ back }) {
         <BackBtn onClick={() => setOpenSession(null)} label="Dashboard" />
         <div style={{ marginTop: 12 }}>
           {openSession.domain === "physio"
-            ? <SessionDetail session={openSession} />
+            ? (openSession.payload?.kind === "assessment"
+                ? <AssessmentDetail session={openSession} />
+                : <SessionDetail session={openSession} />)
             : <LanguageDetail session={openSession} domain={openSession.domain}
                 ratings={openSession.domain === "reading" ? READING_RATINGS : RATINGS} />}
         </div>

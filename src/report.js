@@ -228,7 +228,15 @@ export function buildPhysioReport(session, patientName = "Akki") {
         (r.sitting.longest_hold_seconds != null ? `, longest hold ${r.sitting.longest_hold_seconds}s` : "") + " " +
         (r.sitting.surface ? `, ${r.sitting.surface.replace(/_/g, " ")}` : ""));
     }
-    if (r.rolling && r.rolling.pattern) lines.push(`   Roll: ${r.rolling.pattern.replace(/_/g, " ")}${r.rolling.direction ? ` (${r.rolling.direction})` : ""}`);
+    if (r.rolling) {
+      if (r.rolling.left || r.rolling.right) {
+        const side = (s) => s ? `${(s.pattern || "").replace(/_/g, " ")}${s.involvement != null ? `, ${involveWord[s.involvement] || s.involvement}` : ""}` : "—";
+        lines.push(`   Roll left: ${side(r.rolling.left)}`);
+        lines.push(`   Roll right: ${side(r.rolling.right)}`);
+      } else if (r.rolling.pattern) {
+        lines.push(`   Roll: ${r.rolling.pattern.replace(/_/g, " ")}${r.rolling.direction ? ` (${r.rolling.direction})` : ""}`);
+      }
+    }
     if (r.pnf && r.pnf.pattern) lines.push(`   PNF: ${r.pnf.pattern.replace(/_/g, " ")}${r.pnf.phase ? ` — ${r.pnf.phase.replace(/_/g, " ")}` : ""}`);
     if (r.standing) {
       lines.push(`   Standing: ${r.standing.minutes} min — knees ${(r.standing.knee_position || "").replace(/_/g, " ")}, ` +
