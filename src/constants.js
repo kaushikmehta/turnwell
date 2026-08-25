@@ -338,6 +338,34 @@ export const STIM_CHANGE_REASONS = [
   { key: "protocol",    label: "Protocol" },
 ];
 
+/* The session-level xStep record. `used` stays false until the facilitator
+   starts it from the banner. `montage`/`current`/`state` are the live banner
+   values; `events` is the change log that produces the current curve. Each
+   exercise result also carries a stamp (stim_state/current/montage) copied on
+   completion — stamp for attribution, event log for the curve (§4.5). */
+export const emptyStim = () => ({
+  used: false,
+  device: "xstep",
+  montage_initial: null,
+  montage_rationale: "",
+  started_at_phase: null,
+  stopped_at_phase: null,
+  tolerance_notes: "",
+  skin_check_electrode_sites_pre: null,
+  skin_check_electrode_sites_post: null,
+  montage: null,
+  current: 20,
+  state: "off",
+  events: [],
+});
+/* The per-exercise stamp — copied onto a result on completion, no facilitator
+   input. Off (and null current/montage) whenever stim isn't running. */
+export const stimStampOf = (stim) => ({
+  stim_state: stim && stim.used && stim.state === "on" ? "on" : "off",
+  stim_current: stim && stim.used ? stim.current : null,
+  stim_montage: stim && stim.used ? stim.montage : null,
+});
+
 /* What "count" means for a given exercise. Reps is meaningless for TRAM
    standing (minutes) or a perturbation drill (catches) — read the label
    off the exercise instead of hardcoding "reps" everywhere. */

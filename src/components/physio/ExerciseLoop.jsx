@@ -141,7 +141,7 @@ function AwarenessPicker({ label, value, onChange, response, onResponse, placeho
 
 const numInput = { width: "100%", background: "#fff", border: `1px solid ${C.line}`, borderRadius: 10, padding: "10px 12px", fontSize: 15, color: C.ink };
 
-export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarly }) {
+export function ExerciseLoop({ item, index, total, estimate, stimStamp, onFinish, onEndEarly }) {
   const category = categoryOf(item);
   const scored = isInvolvementScored(item);         // active_training
   const isProbe = category === "probe";
@@ -226,6 +226,8 @@ export function ExerciseLoop({ item, index, total, estimate, onFinish, onEndEarl
       } : null,
       rolling: tracksRoll ? { pattern: rollPattern, direction: rollDirection } : null,
       pnf: tracksPnf ? { pattern: pnfPattern, phase: pnfPhase } : null,
+      // Stim stamp — copied from the banner's live state (handoff §4.5).
+      ...(stimStamp || {}),
     });
   };
 

@@ -4,7 +4,7 @@
  * written to be read by a human (the coordinator, later you), not parsed by a script.
  */
 import { ratingByKey, supportWord, isDeck, isScene } from "./utils";
-import { READING_RATINGS, RECALL_RATINGS, READINESS_STEPS, ROM_SEGMENTS, STATE_METRICS, unitLabel, supportLabel, skinCheckAlerts } from "./constants";
+import { READING_RATINGS, RECALL_RATINGS, READINESS_STEPS, ROM_SEGMENTS, STATE_METRICS, unitLabel, supportLabel, skinCheckAlerts, montageLabel } from "./constants";
 
 const understandWord = { yes: "yes", partly: "partly", no: "no" };
 
@@ -111,7 +111,7 @@ const probeWord = {
 const recallWord = Object.fromEntries(RECALL_RATINGS.map((r) => [r.key, r.label.toLowerCase()]));
 
 export function buildPhysioReport(session, patientName = "Akki") {
-  const { items, results, star, before, after, closing, priming, recall, readiness } = session;
+  const { items, results, star, before, after, closing, priming, recall, readiness, stim } = session;
   const dt = new Date(session.at || Date.now());
   const dateStr = dt.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const timeStr = dt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
@@ -221,6 +221,8 @@ export function buildPhysioReport(session, patientName = "Akki") {
     if (r.understood != null) lines.push(`   Said what it helps with (daily living): ${understandWord[r.understood] || r.understood}`);
     if (r.helpsResponse) lines.push(`      He said: "${r.helpsResponse}"`);
     lines.push(`   Dual-task: ${r.dualTask ? "yes" : "no"}${r.quickStretched ? " · quick-stretched first" : ""}`);
+    if (r.stim_state === "on") lines.push(`   xStep: ON${r.stim_current != null ? ` · ${r.stim_current}` : ""}${r.stim_montage ? ` · ${montageLabel(r.stim_montage)}` : ""}`);
+    else if (r.stim_state === "off") lines.push(`   xStep: off`);
     lines.push("");
   });
 
@@ -257,6 +259,21 @@ export function buildPhysioReport(session, patientName = "Akki") {
   if (standingTotal > 0) {
     lines.push("");
     lines.push(`Standing total: ${standingTotal} min (ceiling 20).`);
+  }
+
+  if (stim && stim.used) {
+    const currents = stim.events.map((e) => e.current).filter((c) => typeof c === "number");
+    const range = currents.length ? `${Math.min(...currents)}–${Math.max(...currents)}` : String(stim.current);
+    lines.push("");
+    lines.push(`xStep (transcutaneous spinal stim): montage ${montageLabel(stim.montage_initial)}${stim.montage_rationale ? ` — ${stim.montage_rationale}` : ""}.`);
+    lines.push(`   Current range ${range} across ${stim.events.length} change${stim.events.length === 1 ? "" : "s"}. Started in ${stim.started_at_phase || "?"}.`);
+    const noResp = stim.events.filter((e) => e.reason === "no_response").length;
+    if (noResp) lines.push(`   ${noResp} increase${noResp === 1 ? "" : "s"} logged as "no response" (titration-chasing, not planned progression).`);
+    const skinBits = [];
+    if (stim.skin_check_electrode_sites_pre) skinBits.push(`pre ${stim.skin_check_electrode_sites_pre.replace(/_/g, " ")}`);
+    if (stim.skin_check_electrode_sites_post) skinBits.push(`post ${stim.skin_check_electrode_sites_post.replace(/_/g, " ")}`);
+    if (skinBits.length) lines.push(`   Electrode-site skin: ${skinBits.join(", ")}.`);
+    lines.push(`   NB: involvement recorded under stim is not comparable to stim-off — keep the series separate.`);
   }
 
   if (closing && closing.fadeProbe) {
