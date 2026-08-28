@@ -193,7 +193,7 @@ export default function App() {
         <Progress sessions={sessions} remove={removeSession} clear={clearSessions} back={() => setView("home")} />
       )}
       {view === "dashboard" && (
-        <Dashboard back={() => setView("home")} />
+        <Dashboard back={() => setView("home")} onRecordAssessment={() => setView("assessment")} />
       )}
     </Shell>
   );
