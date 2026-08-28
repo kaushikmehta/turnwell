@@ -40,7 +40,7 @@ function DomainTabs({ domain, setDomain, counts }) {
   );
 }
 
-export function Dashboard({ back }) {
+export function Dashboard({ back, onRecordAssessment }) {
   const { getToken } = useAuth();
   const [rows, setRows] = useState(null); // null = loading
   const [error, setError] = useState(null);
@@ -92,6 +92,13 @@ export function Dashboard({ back }) {
       {rows !== null && !error && (
         <>
           <DomainTabs domain={domain} setDomain={setDomain} counts={counts} />
+          {domain === "physio" && onRecordAssessment && (
+            <button className="tw-focus tw-lift" onClick={onRecordAssessment}
+              style={{ display: "inline-flex", alignItems: "center", gap: 7, background: C.clay, color: "#fff", border: "none",
+                borderRadius: 12, padding: "10px 16px", fontSize: 14, fontWeight: 700, marginBottom: 18, boxShadow: `0 3px 0 ${C.clayDeep}` }}>
+              ＋ Record an assessment
+            </button>
+          )}
           {rows.length === 0 ? (
             <Empty title="No sessions yet" body="Run a session in any domain and it'll appear here, building a picture over time." />
           ) : domain === "physio" ? (
