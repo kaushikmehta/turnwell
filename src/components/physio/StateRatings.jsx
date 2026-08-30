@@ -17,7 +17,10 @@ export function StateRatings({ value, onChange }) {
       </div>
       {STATE_METRICS.map((m) => (
         <div key={m.key} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
-          <div style={{ flex: 1.2, fontSize: 13.5, color: C.inkSoft }}>{m.label}</div>
+          <div style={{ flex: 1.2 }}>
+            <div style={{ fontSize: 13.5, color: C.inkSoft }}>{m.label}</div>
+            {m.hint && <div style={{ fontSize: 11, color: C.stone, marginTop: 1, lineHeight: 1.3 }}>{m.hint}</div>}
+          </div>
           {STATE_RATERS.map((r) => (
             <input key={r.key} type="number" min={1} max={10} value={value[m.key][r.key]}
               onChange={(e) => set(m.key, r.key, e.target.value)}

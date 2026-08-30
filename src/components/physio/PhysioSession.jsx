@@ -9,10 +9,11 @@ import { Closing } from "./Closing";
 import { PhysioSummary } from "./PhysioSummary";
 import { StimBanner } from "./StimBanner";
 
-export function PhysioSession({ config, home, persist, resume }) {
+export function PhysioSession({ config, physioBank, home, persist, resume, back }) {
   // `resume` (when present) restores an in-progress session at its last phase
   // boundary — completed exercises are kept; a half-entered current screen is not.
-  const [phase, setPhase] = useState(resume?.phase ?? "priming"); // priming | opening | estimates | loop | closing | summary
+  // Flow: opening (state + recall) → priming (ROM) → estimates → loop → closing → summary.
+  const [phase, setPhase] = useState(resume?.phase ?? "opening"); // opening | priming | estimates | loop | closing | summary
   const [priming, setPriming] = useState(resume?.priming ?? null);
   const [star, setStar] = useState(resume?.star ?? null);
   const [before, setBefore] = useState(resume?.before ?? null);
@@ -90,17 +91,18 @@ export function PhysioSession({ config, home, persist, resume }) {
     <div>
       <StimBanner stim={stim} setStim={setStim} phase={phase} exerciseId={currentExerciseId} />
 
-      {phase === "priming" && (
-        <Priming onNext={(p) => { setPriming(p); setPhase("opening"); }} />
+      {phase === "opening" && (
+        <Opening items={items} firstSession={config.firstSession} lastSession={config.lastSession} physioBank={physioBank}
+          onBack={back}
+          onNext={({ star: s, before: b, recall: r, state: st }) => { setStar(s); setBefore(b); setRecall(r); setOpeningState(st); setPhase("priming"); }} />
       )}
 
-      {phase === "opening" && (
-        <Opening items={items} firstSession={config.firstSession} recallRef={config.recallRef} lastSession={config.lastSession}
-          onNext={({ star: s, before: b, recall: r, state: st }) => { setStar(s); setBefore(b); setRecall(r); setOpeningState(st); setPhase("estimates"); }} />
+      {phase === "priming" && (
+        <Priming onBack={() => setPhase("opening")} onNext={(p) => { setPriming(p); setPhase("estimates"); }} />
       )}
 
       {phase === "estimates" && (
-        <Estimates items={items} onNext={(est) => { setEstimates(est); setPhase("loop"); }} />
+        <Estimates items={items} onBack={() => setPhase("priming")} onNext={(est) => { setEstimates(est); setPhase("loop"); }} />
       )}
 
       {phase === "loop" && estimates && (
@@ -111,7 +113,7 @@ export function PhysioSession({ config, home, persist, resume }) {
       )}
 
       {phase === "closing" && (
-        <Closing items={items} star={star} onNext={(c) => {
+        <Closing items={items} star={star} results={results.filter(Boolean)} onBack={() => setPhase("loop")} onNext={(c) => {
           setClosingData(c);
           setPhase("summary");
           clearDraft();

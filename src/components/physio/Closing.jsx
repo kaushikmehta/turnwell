@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import { C, FADE_PROBE_NOTE, FADE_PROBE_OUTCOMES, SUPPORT_LEVELS, supportLabel, emptyStateRatings, compactStateRatings } from "../../constants";
-import { SectionLabel, inputStyle } from "../shared";
+import { C, FADE_PROBE_NOTE, FADE_PROBE_OUTCOMES, SUPPORT_LEVELS, supportLabel, emptyStateRatings, compactStateRatings, unitLabel, INVOLVEMENT } from "../../constants";
+import { SectionLabel, inputStyle, BackBtn } from "../shared";
 import { StateRatings } from "./StateRatings";
+
+const invLabel = (score) => (score == null ? null : INVOLVEMENT.find((l) => l.score === score)?.label || `Inv ${score}`);
+const invColor = (score) => (score == null ? C.stone : INVOLVEMENT.find((l) => l.score === score)?.color || C.stone);
 
 /* Compact 0–8 support-level row for the fade probe — same scale as the sitting
    capture, so the fade probe lands on the primary-goal axis. */
@@ -22,7 +25,10 @@ function SupportRow({ value, onChange }) {
   );
 }
 
-export function Closing({ items, star, onNext }) {
+export function Closing({ items, star, results = [], onNext, onBack }) {
+  // What was actually logged this session, keyed by exercise id — shown against
+  // each exercise in the star-match, the same way the opening shows last session.
+  const resultById = Object.fromEntries(results.map((r) => [r.id, r]));
   const [starRecalledId, setStarRecalledId] = useState(null);
   const [favouriteId, setFavouriteId] = useState(null);
   const [favouriteWhy, setFavouriteWhy] = useState("");
@@ -59,6 +65,7 @@ export function Closing({ items, star, onNext }) {
 
   return (
     <div className="tw-rise">
+      {onBack && <BackBtn onClick={onBack} label="Exercises" />}
       <SectionLabel>Closing</SectionLabel>
       <h2 className="tw-serif" style={{ fontSize: 26, margin: "0 0 18px" }}>Wrapping up</h2>
 
@@ -71,19 +78,36 @@ export function Closing({ items, star, onNext }) {
 
       <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 8 }}>2. Star-match</div>
-        <p style={{ fontSize: 14, color: C.ink, margin: "0 0 12px", lineHeight: 1.4 }}>Ask what today's star exercise was.</p>
+        <p style={{ fontSize: 14, color: C.ink, margin: "0 0 12px", lineHeight: 1.4 }}>What was done today, and what he says the star exercise was.</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
           {items.map((it) => {
             const picked = starRecalledId === it.id;
             const matched = picked && star && it.id === star.id;
             const missed = picked && star && it.id !== star.id;
             const borderColor = matched ? C.sage : missed ? "#B15353" : C.line;
+            const d = resultById[it.id];
+            const inv = d ? invLabel(d.involvement) : null;
             return (
               <button key={it.id} className="tw-focus" onClick={() => setStarRecalledId(it.id)}
                 style={{ textAlign: "left", border: `1.5px solid ${borderColor}`,
                   background: C.surface, color: C.ink,
-                  borderRadius: 12, padding: "11px 14px", fontSize: 14.5, fontWeight: 600 }}>
-                {it.title}{matched ? "  ✓ matches" : missed ? "  ✗ doesn't match" : ""}
+                  borderRadius: 12, padding: "11px 14px" }}>
+                <span style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
+                  <span style={{ fontSize: 14.5, fontWeight: 600 }}>
+                    {it.id === (star && star.id) ? "★ " : ""}{it.title}
+                  </span>
+                  {matched ? <span style={{ fontSize: 12, fontWeight: 700, color: C.sageDeep, flexShrink: 0 }}>✓ matches</span>
+                    : missed ? <span style={{ fontSize: 12, fontWeight: 700, color: "#8C3A3A", flexShrink: 0 }}>✗ doesn't match</span> : null}
+                </span>
+                <span style={{ display: "block", fontSize: 11.5, color: C.inkSoft, fontWeight: 600, marginTop: 3 }}>
+                  {d ? (
+                    <>
+                      {d.actReps != null ? `${d.actReps} ${unitLabel(d.unit)}` : "—"}
+                      {d.actDiff != null ? ` · diff ${d.actDiff}/10` : ""}
+                      {inv ? <span style={{ color: invColor(d.involvement) }}>{` · ${inv}`}</span> : ""}
+                    </>
+                  ) : <span style={{ color: C.stone }}>Not logged this session</span>}
+                </span>
               </button>
             );
           })}

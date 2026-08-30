@@ -29,10 +29,11 @@ function Scale({ label, hint, from, to, value, onChange, color = C.clay }) {
   );
 }
 
-function Seg({ label, options, value, onChange }) {
+function Seg({ label, hint, options, value, onChange }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.ink, marginBottom: hint ? 2 : 6 }}>{label}</div>
+      {hint && <div style={{ fontSize: 11.5, color: C.stone, marginBottom: 6 }}>{hint}</div>}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {options.map((o) => {
           const on = value === o.key;
@@ -82,28 +83,29 @@ export function OpeningState({ value, onChange }) {
 
   return (
     <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: C.sage, marginBottom: 3 }}>State &amp; since last session</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: C.sage, marginBottom: 3 }}>1. State &amp; since last session</div>
       <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 14px", lineHeight: 1.45 }}>
         This is the daily log — captured here, not on a separate screen. Fatigue, alertness and seizure status decide whether today counts toward the progression gate.
       </p>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 4 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: C.ink, marginBottom: 6 }}>Sleep (hours)</div>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: C.ink, marginBottom: 2 }}>Sleep (hours)</div>
+          <div style={{ fontSize: 11.5, color: C.stone, marginBottom: 6 }}>How long he slept last night</div>
           <input type="number" min={0} max={16} step="0.5" value={st.sleep_hours}
             onChange={(e) => set({ sleep_hours: e.target.value })} className="tw-focus" style={inputSm} />
         </div>
       </div>
 
       <div style={{ height: 8 }} />
-      <Scale label="Sleep quality" from={1} to={5} value={st.sleep_quality} onChange={(n) => set({ sleep_quality: n })} color={C.indigo} />
+      <Scale label="Sleep quality" hint="1 very broken … 5 slept well" from={1} to={5} value={st.sleep_quality} onChange={(n) => set({ sleep_quality: n })} color={C.indigo} />
       <Scale label="Fatigue (pre)" hint="0 none … 10 worst · 7+ discounts the session" from={0} to={10} value={st.fatigue_pre} onChange={(n) => set({ fatigue_pre: n })} />
       <Scale label="Alertness" hint="1 drowsy … 5 fully alert · ≤2 discounts the session" from={1} to={5} value={st.alertness} onChange={(n) => set({ alertness: n })} color={C.indigo} />
 
-      <Seg label="Instruction following" options={INSTRUCTION_FOLLOWING} value={st.instruction_following} onChange={(k) => set({ instruction_following: k })} />
-      <Seg label="Initiation" options={INITIATION} value={st.initiation} onChange={(k) => set({ initiation: k })} />
+      <Seg label="Instruction following" hint="How many steps he can follow in one instruction right now" options={INSTRUCTION_FOLLOWING} value={st.instruction_following} onChange={(k) => set({ instruction_following: k })} />
+      <Seg label="Initiation" hint="Does he start a movement on his own (prompt), only after a delay, or not without help (absent)" options={INITIATION} value={st.initiation} onChange={(k) => set({ initiation: k })} />
 
-      <Scale label="Pain" from={0} to={10} value={st.pain} onChange={(n) => set({ pain: n })} />
+      <Scale label="Pain" hint="0 none … 10 worst imaginable" from={0} to={10} value={st.pain} onChange={(n) => set({ pain: n })} />
       {typeof st.pain === "number" && st.pain > 0 && (
         <input value={st.pain_location} onChange={(e) => set({ pain_location: e.target.value })}
           placeholder="Pain location" className="tw-focus tw-rise" style={{ ...inputSm, marginBottom: 14 }} />

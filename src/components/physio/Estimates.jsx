@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { C, unitLabel } from "../../constants";
-import { SectionLabel } from "../shared";
+import { SectionLabel, BackBtn } from "../shared";
 
-export function Estimates({ items, onNext }) {
+export function Estimates({ items, onNext, onBack }) {
   const [values, setValues] = useState(() => Object.fromEntries(items.map((i) => [i.id, { estReps: "", estDiff: "" }])));
 
   const set = (id, field, v) => setValues({ ...values, [id]: { ...values[id], [field]: v } });
@@ -16,6 +16,7 @@ export function Estimates({ items, onNext }) {
 
   return (
     <div className="tw-rise">
+      {onBack && <BackBtn onClick={onBack} label="Priming" />}
       <SectionLabel>Estimates</SectionLabel>
       <h2 className="tw-serif" style={{ fontSize: 26, margin: "0 0 8px" }}>His own estimates</h2>
       <p style={{ color: C.inkSoft, margin: "0 0 20px", fontSize: 14.5, lineHeight: 1.4 }}>
