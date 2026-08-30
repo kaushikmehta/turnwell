@@ -1,48 +1,24 @@
 import React, { useState } from "react";
-import { C, MINUTES_PER_EXERCISE, DAY_PLAN, READINESS_STEPS, previousTrainingDay,
-  validatePositionFlow, positionOrder, categoryOf, montageLabel, unitLabel, INVOLVEMENT } from "../constants";
+import { C, MINUTES_PER_EXERCISE, DAY_PLAN, READINESS_STEPS,
+  validatePositionFlow, positionOrder, categoryOf, montageLabel } from "../constants";
 import { BackBtn, SectionLabel, Field, inputStyle } from "./shared";
-import { lastSessionExercises } from "./physio/LastSessionRecap";
-
-const invLabel = (score) => (score == null ? null : INVOLVEMENT.find((l) => l.score === score)?.label || `Inv ${score}`);
-const invColor = (score) => (score == null ? C.stone : INVOLVEMENT.find((l) => l.score === score)?.color || C.stone);
 
 let customIdSeq = 0;
 
-export function PhysioSetup({ physioBank, lastSession, start, back }) {
-  const [selected, setSelected] = useState([]); // ordered array of exercise objects (seeded or custom)
-  const [dualTask, setDualTask] = useState({}); // id -> bool
-  const [firstSession, setFirstSession] = useState(false);
+// `initial` (a prior config) rehydrates the setup when the user steps back to it
+// from the opening, so the picked exercises, order and readiness aren't lost.
+export function PhysioSetup({ physioBank, initial, start, back }) {
+  const [selected, setSelected] = useState(initial?.items ?? []); // ordered array of exercise objects (seeded or custom)
+  const [dualTask, setDualTask] = useState(() => Object.fromEntries((initial?.items ?? []).map((ex) => [ex.id, !!ex.dualTask]))); // id -> bool
+  const [firstSession, setFirstSession] = useState(initial?.firstSession ?? false);
   const [customOpen, setCustomOpen] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
   const [customInstructions, setCustomInstructions] = useState("");
 
-  // Recall reference — confirmed here at setup, scored live at the opening.
-  const prevDay = previousTrainingDay(new Date().getDay());
-  // Prefer the actual last session's exercises for recall; fall back to the
-  // weekly day-plan heuristic when there's no history yet.
-  const [recallRef, setRecallRef] = useState(() => {
-    const fromLast = lastSession ? lastSessionExercises(lastSession).map((e) => ({ id: e.id, title: e.title })) : [];
-    if (fromLast.length) return fromLast;
-    return prevDay
-      ? prevDay.ids.map((id) => physioBank.find((ex) => ex.id === id)).filter(Boolean).map((ex) => ({ id: ex.id, title: ex.title }))
-      : [];
-  });
-  const [recallAdding, setRecallAdding] = useState("");
-  // What was actually done last session, keyed by exercise id — used to show the
-  // reps / difficulty / involvement alongside each recall row.
-  const lastById = Object.fromEntries(lastSessionExercises(lastSession).map((e) => [e.id, e]));
   // Warm-up & readiness — the prep tasks, moved off the live priming screen.
-  const [readinessDone, setReadinessDone] = useState({});
-  const [alertness, setAlertness] = useState("");
+  const [readinessDone, setReadinessDone] = useState(initial?.readiness?.steps ?? {});
+  const [alertness, setAlertness] = useState(initial?.readiness?.alertness != null ? String(initial.readiness.alertness) : "");
   const toggleReadiness = (k) => setReadinessDone((d) => ({ ...d, [k]: !d[k] }));
-  const recallAddable = physioBank.filter((ex) => !ex.dormant && !recallRef.some((e) => e.id === ex.id));
-  const removeRecall = (id) => setRecallRef(recallRef.filter((e) => e.id !== id));
-  const addRecall = (id) => {
-    const ex = physioBank.find((x) => x.id === id);
-    if (ex && !recallRef.some((e) => e.id === id)) setRecallRef([...recallRef, { id: ex.id, title: ex.title }]);
-    setRecallAdding("");
-  };
 
   const isSelected = (id) => selected.some((s) => s.id === id);
 
@@ -113,11 +89,8 @@ export function PhysioSetup({ physioBank, lastSession, start, back }) {
 
   const begin = () => {
     const items = selected.map((ex) => ({ ...ex, dualTask: !!dualTask[ex.id] }));
-    const recallReference = firstSession
-      ? null
-      : { reference: recallRef, dayLabel: prevDay ? prevDay.label : null, daysAgo: prevDay ? prevDay.daysAgo : null };
     const readiness = { steps: readinessDone, alertness: alertness === "" ? null : Number(alertness) };
-    start({ items, firstSession, recallRef: recallReference, readiness });
+    start({ items, firstSession, readiness });
   };
 
   // Shared card for a seeded pick. Probe cards omit the dual-task sub-toggle.
@@ -185,59 +158,6 @@ export function PhysioSetup({ physioBank, lastSession, start, back }) {
         <span style={{ fontSize: 14, fontWeight: 600, color: C.ink }}>First session</span>
         <span style={{ fontSize: 12.5, color: C.stone }}>— skips "recall last time" at the opening</span>
       </label>
-
-      {!firstSession && (
-        <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "14px 16px", marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, marginBottom: 5 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.sage }}>Last session</div>
-            {prevDay && (
-              <div style={{ fontSize: 11.5, color: C.stone, fontWeight: 600 }}>
-                {prevDay.label.split(" · ")[0]} · {prevDay.daysAgo === 1 ? "yesterday" : `${prevDay.daysAgo} days ago`}
-              </div>
-            )}
-          </div>
-          <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 11px", lineHeight: 1.45 }}>
-            What Akki actually did last time — reps, difficulty and involvement. Adjust the list to what you'll ask him to recall at the opening.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {recallRef.map((e) => {
-              const d = lastById[e.id];
-              const inv = d ? invLabel(d.involvement) : null;
-              return (
-                <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-                  border: `1px solid ${C.line}`, borderRadius: 11, padding: "9px 12px", background: "#fff" }}>
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: C.ink }}>{e.title}</span>
-                    {d ? (
-                      <span style={{ display: "block", fontSize: 11.5, color: C.inkSoft, fontWeight: 600, marginTop: 2 }}>
-                        {d.actReps != null ? `${d.actReps} ${unitLabel(d.unit)}` : "—"}
-                        {d.actDiff != null ? ` · diff ${d.actDiff}/10` : ""}
-                        {inv ? <span style={{ color: invColor(d.involvement) }}>{` · ${inv}`}</span> : ""}
-                      </span>
-                    ) : (
-                      <span style={{ display: "block", fontSize: 11, color: C.stone, marginTop: 2 }}>Not in last session's log — added for recall</span>
-                    )}
-                  </span>
-                  <button className="tw-focus" onClick={() => removeRecall(e.id)}
-                    style={{ background: "none", border: "none", color: C.stone, fontSize: 12, fontWeight: 600, flexShrink: 0 }}>Remove</button>
-                </div>
-              );
-            })}
-            {recallRef.length === 0 && (
-              <p style={{ fontSize: 12.5, color: C.stone, margin: 0, lineHeight: 1.4 }}>
-                Nothing set — add what was worked on last time, or leave empty to skip recall.
-              </p>
-            )}
-          </div>
-          {recallAddable.length > 0 && (
-            <select value={recallAdding} onChange={(e) => addRecall(e.target.value)} className="tw-focus"
-              style={{ width: "100%", marginTop: 9, background: C.surface, border: `1px dashed ${C.line}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, color: C.inkSoft }}>
-              <option value="">+ Add an exercise worked on last time…</option>
-              {recallAddable.map((ex) => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
-            </select>
-          )}
-        </div>
-      )}
 
       {tramBank.length > 0 && (
         <>

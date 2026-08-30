@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { C, ROM_SEGMENTS, TIGHTNESS_OPTIONS } from "../../constants";
-import { SectionLabel } from "../shared";
+import { SectionLabel, BackBtn } from "../shared";
 import { Metronome } from "./Metronome";
 
 /* Block A — priming, now focused on full-body ROM (the live, hands-on tissue
@@ -8,7 +8,7 @@ import { Metronome } from "./Metronome";
    what has to happen at the body, right before the working block: move every
    segment, and settle the two things that gate the standing goal — ankle
    dorsiflexion range, and overnight splint tolerance. */
-export function Priming({ onNext }) {
+export function Priming({ onNext, onBack }) {
   const [romDone, setRomDone] = useState({});
   const [tight, setTight] = useState("");
   // Per-segment tightness (handoff §4.1) — one tap per segment, feeding the
@@ -33,6 +33,7 @@ export function Priming({ onNext }) {
 
   return (
     <div className="tw-rise">
+      {onBack && <BackBtn onClick={onBack} label="Opening" />}
       <SectionLabel>Block A · Priming</SectionLabel>
       <h2 className="tw-serif" style={{ fontSize: 26, margin: "0 0 6px" }}>Full-body ROM</h2>
       <p style={{ color: C.inkSoft, margin: "0 0 20px", fontSize: 14.5, lineHeight: 1.45 }}>
@@ -45,6 +46,21 @@ export function Priming({ onNext }) {
         <SectionLabel>Segments</SectionLabel>
         <span style={{ fontSize: 12, color: C.stone, fontWeight: 600 }}>{doneCount}/{ROM_SEGMENTS.length} worked</span>
       </div>
+
+      {/* Tightness legend — what to tap under each segment. */}
+      <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.inkSoft, marginBottom: 8 }}>Tightness — what to tap for each segment</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+          {TIGHTNESS_OPTIONS.map((t) => (
+            <div key={t.key} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+              <span style={{ flexShrink: 0, marginTop: 1, border: `1.5px solid ${t.color}`, background: t.tint,
+                color: t.color, borderRadius: 999, padding: "3px 10px", fontSize: 11.5, fontWeight: 700 }}>{t.label}</span>
+              <span style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.4 }}>{t.note}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
         {ROM_SEGMENTS.map((s) => {
           const on = !!romDone[s.key];
@@ -164,7 +180,7 @@ export function Priming({ onNext }) {
         style={{ width: "100%", background: canContinue ? C.clay : C.line, color: canContinue ? "#fff" : C.inkSoft,
           border: "none", borderRadius: 16, padding: "17px", fontSize: 17, fontWeight: 700,
           boxShadow: canContinue ? `0 3px 0 ${C.clayDeep}` : "none" }}>
-        {canContinue ? "Primed · go to opening" : "Answer the ankle check to continue"}
+        {canContinue ? "Primed · go to estimates" : "Answer the ankle check to continue"}
       </button>
     </div>
   );

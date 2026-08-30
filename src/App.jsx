@@ -177,13 +177,15 @@ export default function App() {
         <Setup bank={bank} start={startRun} back={() => setView("home")} />
       )}
       {view === "setup" && domain === "physio" && (
-        <PhysioSetup physioBank={physioBank} lastSession={physioSessions[0] ?? null} start={beginPhysio} back={() => setView("home")} />
+        <PhysioSetup physioBank={physioBank} lastSession={physioSessions[0] ?? null} initial={physioConfig}
+          start={beginPhysio} back={() => setView("home")} />
       )}
       {view === "setup" && domain === "reading" && (
         <ReadingSetup passages={readingBank} start={beginReading} back={() => setView("home")} />
       )}
       {view === "physio" && physioConfig && (
-        <PhysioSession config={physioConfig} resume={resume} persist={(rec) => persistSession("physio", rec)}
+        <PhysioSession config={physioConfig} physioBank={physioBank} resume={resume} persist={(rec) => persistSession("physio", rec)}
+          back={() => { endDraft(); setView("setup"); }}
           home={() => { setPhysioConfig(null); setResume(null); setDraft(loadDraft()); setView("home"); }} />
       )}
       {view === "reading" && readingConfig && (

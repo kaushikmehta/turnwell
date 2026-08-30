@@ -73,9 +73,9 @@ export const RSVP_STEP_WPM = 20;
    the two can be compared, and rated by both the patient (self) and the
    facilitator (observed) since the two views often diverge. */
 export const STATE_METRICS = [
-  { key: "tired",      label: "Tiredness" },
-  { key: "mood",       label: "Mood" },
-  { key: "motivation", label: "Motivation" },
+  { key: "tired",      label: "Tiredness",  hint: "1 fresh … 10 exhausted" },
+  { key: "mood",       label: "Mood",       hint: "1 low … 10 great" },
+  { key: "motivation", label: "Motivation", hint: "1 none … 10 fully keen" },
 ];
 export const STATE_RATERS = [
   { key: "patient",     label: "Akki" },
@@ -180,9 +180,9 @@ export const PROBE_OUTCOMES = [
 /* Segment tightness — one tap per priming segment (handoff §4.1). Feeds the
    contracture early-warning heatmap. */
 export const TIGHTNESS_OPTIONS = [
-  { key: "normal",             label: "Normal",       color: C.sage,     tint: C.sageTint },
-  { key: "tighter_than_usual", label: "Tighter",      color: C.clay,     tint: C.clayTint },
-  { key: "catch_felt",         label: "Catch felt",   color: C.clayDeep, tint: "#EFDCC8" },
+  { key: "normal",             label: "Normal",     note: "Moves freely through range — soft end-feel, no restriction.",           color: C.sage,     tint: C.sageTint },
+  { key: "tighter_than_usual", label: "Tighter",    note: "Stiffer or shorter than usual — resistance before the end, but it gives.", color: C.clay,     tint: C.clayTint },
+  { key: "catch_felt",         label: "Catch felt", note: "A distinct grab on the stretch — the muscle catches. A spasticity sign; flag it.", color: C.clayDeep, tint: "#EFDCC8" },
 ];
 
 /* Warm-up & readiness — the prep tasks. Set up on the session-setup screen
