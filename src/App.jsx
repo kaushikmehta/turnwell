@@ -25,6 +25,9 @@ export default function App() {
   const [physioBank] = useState(() => seedPhysioExercises());
   const [readingBank] = useState(() => seedReadingPassages());
   const [sessions, setSessions] = useState([]);
+  // Finished physio training sessions (newest first), so a new session's setup
+  // and opening can show what was done last time. Assessment rows are excluded.
+  const [physioSessions, setPhysioSessions] = useState([]);
   const [run, setRun] = useState(null);
   const [physioConfig, setPhysioConfig] = useState(null);
   const [readingConfig, setReadingConfig] = useState(null);
@@ -70,6 +73,11 @@ export default function App() {
   // Fire-and-forget: the UI has already advanced; a failed save is logged, not
   // surfaced mid-session (the local copy stays visible until reload).
   const persistSession = useCallback((sessionDomain, record) => {
+    // Keep the local physio history current so a back-to-back session's recap
+    // reflects the one just finished (assessments don't count as "last session").
+    if (sessionDomain === "physio" && (record?.kind ?? "session") !== "assessment") {
+      setPhysioSessions((prev) => [record, ...prev]);
+    }
     saveSession(getToken, sessionDomain, record).catch((err) => {
       console.error(`Failed to save ${sessionDomain} session:`, err);
     });
@@ -85,6 +93,11 @@ export default function App() {
         if (cancelled) return;
         const speech = rows.filter((r) => r.domain === "speech").map((r) => ({ ...r.payload, id: r.id }));
         setSessions(speech);
+        const physio = rows
+          .filter((r) => r.domain === "physio" && (r.payload?.kind ?? "session") !== "assessment")
+          .map((r) => ({ ...r.payload, id: r.id, at: r.payload?.at ?? new Date(r.performedAt).getTime() }))
+          .sort((a, b) => (b.at ?? 0) - (a.at ?? 0));
+        setPhysioSessions(physio);
       })
       .catch((err) => console.error("Failed to load sessions:", err));
     return () => { cancelled = true; };
@@ -125,7 +138,8 @@ export default function App() {
   const beginPhysio = (config) => {
     if (!confirmDiscardDraft()) return;
     setResume(null);
-    setPhysioConfig(config);
+    // Carry the previous session into the config so the opening can recap it.
+    setPhysioConfig({ ...config, lastSession: config.firstSession ? null : physioSessions[0] ?? null });
     setView("physio");
   };
   const beginReading = (passages) => {
@@ -163,7 +177,7 @@ export default function App() {
         <Setup bank={bank} start={startRun} back={() => setView("home")} />
       )}
       {view === "setup" && domain === "physio" && (
-        <PhysioSetup physioBank={physioBank} start={beginPhysio} back={() => setView("home")} />
+        <PhysioSetup physioBank={physioBank} lastSession={physioSessions[0] ?? null} start={beginPhysio} back={() => setView("home")} />
       )}
       {view === "setup" && domain === "reading" && (
         <ReadingSetup passages={readingBank} start={beginReading} back={() => setView("home")} />
@@ -177,7 +191,7 @@ export default function App() {
           home={() => { setReadingConfig(null); setResume(null); setDraft(loadDraft()); setView("home"); }} />
       )}
       {view === "assessment" && (
-        <Assessment persist={(rec) => persistSession("physio", rec)} home={() => setView("home")} />
+        <Assessment persist={(rec) => persistSession("physio", rec)} physioBank={physioBank} home={() => setView("home")} />
       )}
       {view === "run" && run && (
         <Session run={run} setRun={setRun} finish={finishRun}

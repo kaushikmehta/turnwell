@@ -6,10 +6,13 @@
 import {
   ASSESSMENT_TYPES, SATCO_CONTROLS, TARDIEU_MUSCLES, GONIOMETRY_MOTIONS,
   coughFlowBand, GAS_LEVELS, COGNITIVE_INSTRUMENTS,
+  RATING_RATERS, PERFORMANCE_TIMEPOINTS, PERFORMANCE_DIMENSIONS,
+  PARADIGM_STAGES, PARADIGM_DIMENSIONS, unitLabel,
 } from "../../constants";
 
 const muscleLabel = (k) => TARDIEU_MUSCLES.find((m) => m.key === k)?.label || k;
 const motionLabel = (k) => GONIOMETRY_MOTIONS.find((m) => m.key === k)?.label || k;
+const raterLabel = (k) => RATING_RATERS.find((r) => r.key === k)?.label || k;
 
 export function summarizeAssessment(payload) {
   const type = payload.assessment_type;
@@ -50,6 +53,31 @@ export function summarizeAssessment(payload) {
     if (c.date) lines.push({ label: "Date", value: c.date });
     if (c.administrator) lines.push({ label: "Administrator", value: c.administrator });
     if (c.notes) lines.push({ label: "Notes", value: c.notes });
+  } else if (type === "performance_ratings" && payload.performance) {
+    const p = payload.performance;
+    const tp = PERFORMANCE_TIMEPOINTS.find((t) => t.key === p.timepoint)?.label || p.timepoint;
+    lines.push({ label: "Rater", value: raterLabel(p.rater) });
+    lines.push({ label: "Timepoint", value: tp });
+    PERFORMANCE_DIMENSIONS.forEach((d) => {
+      const v = p.scores?.[d.key];
+      if (v != null) lines.push({ label: d.label, value: `${v}/10` });
+    });
+    if (p.capacity_note) lines.push({ label: "Increase in capacity", value: p.capacity_note });
+  } else if (type === "paradigm_ratings" && payload.paradigm) {
+    const p = payload.paradigm;
+    lines.push({ label: "Rater", value: raterLabel(p.rater) });
+    lines.push({ label: "Stage", value: PARADIGM_STAGES.find((s) => s.key === p.stage)?.label || p.stage });
+    PARADIGM_DIMENSIONS.forEach((d) => {
+      const v = p.scores?.[d.key];
+      if (v != null) lines.push({ label: d.label, value: `${v}/10` });
+    });
+    if (p.attention_note) lines.push({ label: "Needs attention", value: p.attention_note });
+  } else if (type === "exercise_baselines") {
+    if (payload.rater_name) lines.push({ label: "Measured by", value: payload.rater_name });
+    (payload.baselines || []).forEach((b) => lines.push({
+      label: b.title,
+      value: `${b.reps} ${unitLabel(b.unit)}${b.diff != null ? ` · difficulty ${b.diff}/10` : ""}`,
+    }));
   }
 
   return { title: meta?.label || type, lines };

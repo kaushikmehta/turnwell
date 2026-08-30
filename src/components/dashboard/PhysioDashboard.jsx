@@ -5,7 +5,8 @@
  * prediction accuracy. Opening a card is lifted to the Dashboard shell.
  */
 import React, { useMemo, useState } from "react";
-import { C, ROM_SEGMENTS, KNEE_POSITIONS, ASSESSMENT_TYPES } from "../../constants";
+import { C, ROM_SEGMENTS, KNEE_POSITIONS, ASSESSMENT_TYPES,
+  RATING_RATERS, PERFORMANCE_TIMEPOINTS, PARADIGM_STAGES } from "../../constants";
 import { LineTrend, BarTrend, MultiLineTrend, Heatmap } from "./charts";
 import {
   toPhysioSessions, toPhysioAssessments, sessionMetrics, involvementColor, involvementLabel,
@@ -14,6 +15,25 @@ import {
 } from "./metrics";
 
 const KNEE_COLOR = { extended: C.sage, intermittent_buckling: C.clay, flexed_suspended: "#B15353" };
+
+// A short distinguishing tag for rating / baseline instruments (rater · timepoint).
+function assessmentTag(payload) {
+  const raterLabel = (k) => RATING_RATERS.find((r) => r.key === k)?.label || k;
+  if (payload.assessment_type === "performance_ratings" && payload.performance) {
+    const tp = PERFORMANCE_TIMEPOINTS.find((t) => t.key === payload.performance.timepoint)?.label || payload.performance.timepoint;
+    return `${raterLabel(payload.performance.rater)} · ${tp}`;
+  }
+  if (payload.assessment_type === "paradigm_ratings" && payload.paradigm) {
+    const st = PARADIGM_STAGES.find((s) => s.key === payload.paradigm.stage)?.label || payload.paradigm.stage;
+    return `${raterLabel(payload.paradigm.rater)} · ${st}`;
+  }
+  if (payload.assessment_type === "exercise_baselines") {
+    const n = (payload.baselines || []).length;
+    const count = `${n} exercise${n === 1 ? "" : "s"}`;
+    return payload.rater_name ? `${payload.rater_name} · ${count}` : count;
+  }
+  return null;
+}
 
 function CardStat({ label, value, accent }) {
   return (
@@ -102,6 +122,7 @@ export function PhysioOverview({ rows, onOpen }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 10 }}>
             {assessments.map((a) => {
               const meta = ASSESSMENT_TYPES.find((t) => t.key === a.payload.assessment_type);
+              const tag = assessmentTag(a.payload);
               return (
                 <button key={a.id} className="tw-focus tw-lift" onClick={() => onOpen(a)}
                   style={{ textAlign: "left", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "11px 13px", cursor: "pointer" }}>
@@ -109,7 +130,7 @@ export function PhysioOverview({ rows, onOpen }) {
                     <span style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{meta?.label || a.payload.assessment_type}</span>
                     <span style={{ color: C.stone, fontSize: 16, lineHeight: 1 }}>›</span>
                   </div>
-                  <div style={{ fontSize: 12, color: C.stone, marginTop: 2 }}>{fmtDate(a.at)}</div>
+                  <div style={{ fontSize: 12, color: C.stone, marginTop: 2 }}>{tag ? `${tag} · ` : ""}{fmtDate(a.at)}</div>
                 </button>
               );
             })}

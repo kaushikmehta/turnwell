@@ -447,6 +447,61 @@ export const ASSESSMENT_TYPES = [
   { key: "gas",               label: "GAS",                 cadence: "Quarterly",   blurb: "Goal Attainment — −2…+2 per pre-written goal." },
   { key: "fss",               label: "FSS",                 cadence: "Quarterly",   blurb: "Fatigue Severity Scale — 9 items, 1–7, stored as mean." },
   { key: "cognitive_external",label: "External cognitive",  cadence: "As done",     blurb: "Record a MoCA / ACE-III score administered elsewhere." },
+  { key: "performance_ratings",label: "Performance ratings", cadence: "Monthly",    blurb: "Therapist's 1–10 rating of Akki vs baseline — engagement, focus, memory, motivation, stamina." },
+  { key: "paradigm_ratings",   label: "Paradigm ratings",   cadence: "Pre / post",  blurb: "Therapist's own experience of the program — ease of learning, remembering, and fit into the session." },
+  { key: "exercise_baselines", label: "Exercise baselines", cadence: "Re-baseline", blurb: "Akki's baseline count & difficulty per exercise — the reference capacity gains are measured against." },
+];
+
+/* Who is filling in a rating scale, and when. Both spreadsheets are filled by a
+   therapist (not by Akki), so every rating is attributed to a rater and a
+   timepoint so baseline→monthly movement can be read per rater. */
+export const RATING_RATERS = [
+  { key: "akash",  label: "Akash" },
+  { key: "charmi", label: "Charmie" },
+];
+
+/* Baselines can be taken by a wider set than the two therapists — including
+   family, or anyone else (typed into "Other"). */
+export const BASELINE_RATERS = [
+  { key: "akash",  label: "Akash" },
+  { key: "charmi", label: "Charmie" },
+  { key: "family", label: "Family" },
+  { key: "other",  label: "Other" },
+];
+
+/* Monthly timepoints for the performance scale (mirrors the sheet's baseline +
+   month-end cadence). Baseline is recorded retrospectively. */
+export const PERFORMANCE_TIMEPOINTS = [
+  { key: "baseline", label: "Baseline" },
+  { key: "2026-08",  label: "Aug 2026" },
+  { key: "2026-09",  label: "Sep 2026" },
+  { key: "2026-10",  label: "Oct 2026" },
+  { key: "2026-11",  label: "Nov 2026" },
+  { key: "2026-12",  label: "Dec 2026" },
+];
+
+/* Performance dimensions — therapist's estimate of Akki vs baseline, 1–10.
+   "Increase in capacity" is captured as a qualitative note, not a number. */
+export const PERFORMANCE_DIMENSIONS = [
+  { key: "engagement", label: "Engagement in session" },
+  { key: "awareness",  label: "Awareness about session goals & exercises" },
+  { key: "focus",      label: "Focus and attention" },
+  { key: "memory",     label: "Memory" },
+  { key: "motivation", label: "Motivation", note: "Actual motivation to participate — not the verbal 9 he always gives." },
+  { key: "stamina",    label: "Stamina" },
+];
+
+/* Paradigm scale — the therapist's own experience of running the program.
+   Recorded PRE (early) and POST (after a stretch of use). */
+export const PARADIGM_STAGES = [
+  { key: "pre",  label: "PRE" },
+  { key: "post", label: "POST" },
+];
+export const PARADIGM_DIMENSIONS = [
+  { key: "ease_learning",       label: "Ease of learning" },
+  { key: "ease_remembering",    label: "Ease of remembering steps" },
+  { key: "ease_fitting",        label: "Ease of fitting the program into session flow" },
+  { key: "overall_achievement", label: "Overall achievement", note: "Achieved, out of the full potential." },
 ];
 
 /* SATCo (§5.1). Seven segmental levels × three control types; each present /

@@ -3,9 +3,12 @@ import {
   C, ASSESSMENT_TYPES, SATCO_LEVELS, SATCO_CONTROLS, SATCO_CELLS, satcoLevel,
   TARDIEU_MUSCLES, TARDIEU_QUALITY, GONIOMETRY_MOTIONS, BODY_SIDES,
   coughFlowBand, TIS_SUBSCALES, GAS_LEVELS, FSS_ITEMS, COGNITIVE_INSTRUMENTS,
+  RATING_RATERS, BASELINE_RATERS, PERFORMANCE_TIMEPOINTS, PERFORMANCE_DIMENSIONS,
+  PARADIGM_STAGES, PARADIGM_DIMENSIONS, unitLabel,
 } from "../../constants";
 import { BackBtn, SectionLabel } from "../shared";
 import { summarizeAssessment } from "./assessmentSummary";
+import { ASSESSMENT_FACILITATION } from "./facilitation";
 
 /* Assessment recording (handoff §5). The app records scores administered by
    the clinician — it never presents test items. One picker, then a per-type
@@ -29,8 +32,56 @@ function Card({ children }) {
   return <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>{children}</div>;
 }
 
+/* Collapsible "how to run this" — the setup half of the facilitation aid. */
+function HowToRun({ facil }) {
+  const [open, setOpen] = useState(false);
+  if (!facil || !facil.setup) return null;
+  return (
+    <div style={{ background: C.sageTint, border: `1px solid ${C.sage}44`, borderRadius: 16, marginBottom: 14, overflow: "hidden" }}>
+      <button type="button" className="tw-focus" onClick={() => setOpen((o) => !o)}
+        style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: "13px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer" }}>
+        <span style={{ fontSize: 13.5, fontWeight: 700, color: C.sageDeep }}>How to run this — setup</span>
+        <span style={{ fontSize: 12, color: C.sageDeep, transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ padding: "0 16px 15px" }}>
+          {facil.aim && <p style={{ fontSize: 12.5, color: C.ink, margin: "0 0 12px", lineHeight: 1.5 }}>{facil.aim}</p>}
+          <ol style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 8 }}>
+            {facil.setup.map((s, i) => <li key={i} style={{ fontSize: 12.5, color: C.ink, lineHeight: 1.5 }}>{s}</li>)}
+          </ol>
+          <p style={{ fontSize: 11, color: C.stone, margin: "12px 0 0", lineHeight: 1.4, fontStyle: "italic" }}>
+            Clinical draft — review against your own protocol before relying on it.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Inline "how to capture" hint — the reading half, sits under a field label. */
+function InfoHint({ text }) {
+  const [open, setOpen] = useState(false);
+  if (!text) return null;
+  return (
+    <div style={{ margin: "3px 0 9px" }}>
+      <button type="button" className="tw-focus" onClick={() => setOpen((o) => !o)}
+        style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0,
+          color: open ? C.clayDeep : C.stone, fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}>
+        <span style={{ width: 15, height: 15, borderRadius: 8, border: "1.5px solid currentColor", fontSize: 10,
+          lineHeight: "12px", textAlign: "center", fontStyle: "italic", fontWeight: 800 }}>i</span>
+        {open ? "Hide" : "How to capture this reading"}
+      </button>
+      {open && (
+        <p style={{ fontSize: 12.5, color: C.ink, margin: "7px 0 0", lineHeight: 1.5,
+          background: C.clayTint, border: `1px solid ${C.clay}44`, borderRadius: 10, padding: "10px 12px" }}>{text}</p>
+      )}
+    </div>
+  );
+}
+
 /* ---- SATCo ---- */
-function SATCoForm({ onSave }) {
+function SATCoForm({ onSave, facil }) {
   const [grid, setGrid] = useState(() => Object.fromEntries(SATCO_LEVELS.map((l) => [l.level, { static: "NT", active: "NT", reactive: "NT" }])));
   const cycle = (level, control) => {
     const cur = grid[level][control];
@@ -49,6 +100,7 @@ function SATCoForm({ onSave }) {
         <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 12px", lineHeight: 1.5 }}>
           Tap each cell to cycle <strong>NT → P → A</strong>. Static = held 5s neutral · Active = maintained through head-turn/reach · Reactive = regained after a nudge.
         </p>
+        <InfoHint text={facil?.capture?.grid} />
         <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: 6, alignItems: "center" }}>
           <div />
           {SATCO_CONTROLS.map((c) => <div key={c.key} style={{ fontSize: 11, fontWeight: 700, color: C.inkSoft, textAlign: "center" }}>{c.label}</div>)}
@@ -88,7 +140,7 @@ function SATCoForm({ onSave }) {
 }
 
 /* ---- Modified Tardieu ---- */
-function TardieuForm({ onSave }) {
+function TardieuForm({ onSave, facil }) {
   const [rows, setRows] = useState([]);
   const [muscle, setMuscle] = useState(TARDIEU_MUSCLES[0].key);
   const [side, setSide] = useState("left");
@@ -117,12 +169,14 @@ function TardieuForm({ onSave }) {
                 color: side === s.key ? C.clayDeep : C.inkSoft, borderRadius: 10, padding: "9px", fontSize: 13.5, fontWeight: 700 }}>{s.label}</button>
           ))}
         </div>
+        <InfoHint text={facil?.capture?.r1r2} />
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
           <div><div style={{ fontSize: 11.5, color: C.inkSoft, marginBottom: 4 }}>R1 (catch, fast)</div><input type="number" value={r1} onChange={(e) => setR1(e.target.value)} className="tw-focus" style={numSm} /></div>
           <div><div style={{ fontSize: 11.5, color: C.inkSoft, marginBottom: 4 }}>R2 (range, slow)</div><input type="number" value={r2} onChange={(e) => setR2(e.target.value)} className="tw-focus" style={numSm} /></div>
           {r1 !== "" && r2 !== "" && <div><div style={{ fontSize: 11.5, color: C.inkSoft, marginBottom: 4 }}>R2−R1</div><div style={{ fontSize: 20, fontWeight: 700, color: C.sageDeep, paddingTop: 6 }}>{Number(r2) - Number(r1)}°</div></div>}
         </div>
         <div style={{ fontSize: 11.5, color: C.inkSoft, marginBottom: 6 }}>Quality grade</div>
+        <InfoHint text={facil?.capture?.quality} />
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
           {TARDIEU_QUALITY.map((q) => (
             <button key={q.grade} className="tw-focus" onClick={() => setQuality(q.grade)} title={q.label}
@@ -154,7 +208,7 @@ function TardieuForm({ onSave }) {
 }
 
 /* ---- Goniometry ---- */
-function GoniometryForm({ onSave }) {
+function GoniometryForm({ onSave, facil }) {
   const [vals, setVals] = useState({});
   const set = (motion, sideKey, v) => setVals((s) => ({ ...s, [motion]: { ...(s[motion] || {}), [sideKey]: v } }));
   const any = Object.values(vals).some((m) => m && (m.left !== "" && m.left != null || m.right !== "" && m.right != null));
@@ -166,6 +220,7 @@ function GoniometryForm({ onSave }) {
     <>
       <Card>
         <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 12px", lineHeight: 1.5 }}>Range in degrees, per side. Leave blank if not measured. A loss ≥5–10° between visits should be flagged.</p>
+        <InfoHint text={facil?.capture?.reading} />
         <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr", gap: "8px 8px", alignItems: "center" }}>
           <div />
           <div style={{ fontSize: 11, fontWeight: 700, color: C.inkSoft, textAlign: "center" }}>Left</div>
@@ -187,13 +242,14 @@ function GoniometryForm({ onSave }) {
 }
 
 /* ---- Peak cough flow ---- */
-function CoughFlowForm({ onSave }) {
+function CoughFlowForm({ onSave, facil }) {
   const [v, setV] = useState("");
   const band = v !== "" ? coughFlowBand(Number(v)) : null;
   return (
     <>
       <Card>
         <div style={{ fontSize: 12.5, fontWeight: 700, color: C.ink, marginBottom: 8 }}>Best of three (L/min)</div>
+        <InfoHint text={facil?.capture?.effort} />
         <input type="number" value={v} onChange={(e) => setV(e.target.value)} className="tw-focus" style={inp} />
         {band && (
           <div style={{ marginTop: 12, background: band.alert ? "#F6E7E7" : C.sageTint, border: `1.5px solid ${band.alert ? "#B15353" : C.sage}`, borderRadius: 12, padding: "11px 14px" }}>
@@ -208,13 +264,14 @@ function CoughFlowForm({ onSave }) {
 }
 
 /* ---- TIS ---- */
-function TISForm({ onSave }) {
+function TISForm({ onSave, facil }) {
   const [s, setS] = useState({});
   const total = TIS_SUBSCALES.reduce((t, sub) => t + (typeof s[sub.key] === "number" ? s[sub.key] : 0), 0);
   const complete = TIS_SUBSCALES.every((sub) => typeof s[sub.key] === "number");
   return (
     <>
       <Card>
+        <InfoHint text={facil?.capture?.scoring} />
         {TIS_SUBSCALES.map((sub) => (
           <div key={sub.key} style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: C.ink, marginBottom: 6 }}>{sub.label} <span style={{ color: C.stone, fontWeight: 500 }}>(0–{sub.max})</span></div>
@@ -236,13 +293,14 @@ function TISForm({ onSave }) {
 }
 
 /* ---- SCIM III ---- */
-function SCIMForm({ onSave }) {
+function SCIMForm({ onSave, facil }) {
   const [total, setTotal] = useState("");
   const [notes, setNotes] = useState("");
   return (
     <>
       <Card>
         <div style={{ fontSize: 12.5, fontWeight: 700, color: C.ink, marginBottom: 8 }}>SCIM III total (0–100)</div>
+        <InfoHint text={facil?.capture?.scoring} />
         <input type="number" min={0} max={100} value={total} onChange={(e) => setTotal(e.target.value)} className="tw-focus" style={inp} />
         <div style={{ fontSize: 12.5, fontWeight: 700, color: C.ink, margin: "14px 0 6px" }}>Notes (optional)</div>
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="tw-focus" style={{ ...inp, resize: "vertical" }} />
@@ -254,7 +312,7 @@ function SCIMForm({ onSave }) {
 }
 
 /* ---- GAS ---- */
-function GASForm({ onSave }) {
+function GASForm({ onSave, facil }) {
   const [goals, setGoals] = useState([]);
   const [name, setName] = useState("");
   const [level, setLevel] = useState(0);
@@ -263,6 +321,7 @@ function GASForm({ onSave }) {
     <>
       <Card>
         <div style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, marginBottom: 8 }}>Add a goal (written in advance by the physio)</div>
+        <InfoHint text={facil?.capture?.scoring} />
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Goal" className="tw-focus" style={{ ...inp, marginBottom: 8 }} />
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
           {GAS_LEVELS.map((l) => (
@@ -291,7 +350,7 @@ function GASForm({ onSave }) {
 }
 
 /* ---- FSS ---- */
-function FSSForm({ onSave }) {
+function FSSForm({ onSave, facil }) {
   const [items, setItems] = useState(Array(FSS_ITEMS).fill(null));
   const complete = items.every((v) => typeof v === "number");
   const mean = complete ? Math.round((items.reduce((a, b) => a + b, 0) / FSS_ITEMS) * 10) / 10 : null;
@@ -299,6 +358,7 @@ function FSSForm({ onSave }) {
     <>
       <Card>
         <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 12px", lineHeight: 1.45 }}>Nine items, 1 (strongly disagree) – 7 (strongly agree). Stored as the mean. Complements the daily fatigue rating.</p>
+        <InfoHint text={facil?.capture?.rating} />
         {items.map((v, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <span style={{ width: 20, fontSize: 12, color: C.stone, fontWeight: 700 }}>{i + 1}</span>
@@ -351,12 +411,196 @@ function CognitiveForm({ onSave }) {
   );
 }
 
+/* ---- shared rating widgets (rating scales) ---- */
+
+/* A single-select pill row — used for rater / timepoint / stage. */
+function PillRow({ options, value, onChange }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+      {options.map((o) => {
+        const on = value === o.key;
+        return (
+          <button key={o.key} className="tw-focus" onClick={() => onChange(o.key)}
+            style={{ border: `1.5px solid ${on ? C.clayDeep : C.line}`, background: on ? C.clayTint : C.surface,
+              color: on ? C.clayDeep : C.inkSoft, borderRadius: 10, padding: "9px 13px", fontSize: 13.5, fontWeight: 700 }}>
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* 1–10 scale, best performance = 10. */
+function Scale10({ value, onChange }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+      {Array.from({ length: 10 }).map((_, i) => {
+        const n = i + 1;
+        const on = value === n;
+        return (
+          <button key={n} className="tw-focus" onClick={() => onChange(n)}
+            style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${on ? C.clayDeep : C.line}`,
+              background: on ? C.clay : C.surface, color: on ? "#fff" : C.inkSoft, fontSize: 13, fontWeight: 700 }}>{n}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* A block: dimension label (+ optional note) over a 1–10 scale. */
+function ScaleRow({ dim, value, onChange }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink, marginBottom: dim.note ? 2 : 8 }}>{dim.label}</div>
+      {dim.note && <div style={{ fontSize: 11.5, color: C.stone, marginBottom: 8, lineHeight: 1.4 }}>{dim.note}</div>}
+      <Scale10 value={value} onChange={onChange} />
+    </div>
+  );
+}
+
+/* ---- Performance ratings (therapist rates Akki vs baseline) ---- */
+function PerformanceRatingsForm({ onSave, facil }) {
+  const [rater, setRater] = useState(null);
+  const [timepoint, setTimepoint] = useState(null);
+  const [scores, setScores] = useState({});
+  const [capacityNote, setCapacityNote] = useState("");
+  const setScore = (k, v) => setScores((s) => ({ ...s, [k]: v }));
+  const allScored = PERFORMANCE_DIMENSIONS.every((d) => typeof scores[d.key] === "number");
+  const canSave = rater && timepoint && allScored;
+  return (
+    <>
+      <Card>
+        <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 14px", lineHeight: 1.5 }}>
+          Your estimate of Akki's performance vs. baseline. Score the best you saw at this timepoint, 1 (low) – 10 (best).
+        </p>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.inkSoft, marginBottom: 6 }}>Rater</div>
+        <PillRow options={RATING_RATERS} value={rater} onChange={setRater} />
+        <div style={{ height: 14 }} />
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.inkSoft, marginBottom: 6 }}>Timepoint</div>
+        <PillRow options={PERFORMANCE_TIMEPOINTS} value={timepoint} onChange={setTimepoint} />
+      </Card>
+      <Card>
+        <InfoHint text={facil?.capture?.scoring} />
+        {PERFORMANCE_DIMENSIONS.map((d) => (
+          <ScaleRow key={d.key} dim={d} value={scores[d.key]} onChange={(v) => setScore(d.key, v)} />
+        ))}
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink, marginBottom: 2 }}>Increase in capacity</div>
+        <div style={{ fontSize: 11.5, color: C.stone, marginBottom: 8, lineHeight: 1.4 }}>Qualitative — e.g. counts increasing, complexity coped with, assistance / cueing reduced.</div>
+        <InfoHint text={facil?.capture?.capacity} />
+        <textarea value={capacityNote} onChange={(e) => setCapacityNote(e.target.value)} rows={3} className="tw-focus" style={{ ...inp, resize: "vertical" }} />
+      </Card>
+      <SaveBar label="Save performance ratings" disabled={!canSave}
+        onClick={() => onSave({ performance: { rater, timepoint, scores, capacity_note: capacityNote.trim() } })} />
+    </>
+  );
+}
+
+/* ---- Paradigm ratings (therapist rates their own experience) ---- */
+function ParadigmRatingsForm({ onSave, facil }) {
+  const [rater, setRater] = useState(null);
+  const [stage, setStage] = useState(null);
+  const [scores, setScores] = useState({});
+  const [attentionNote, setAttentionNote] = useState("");
+  const setScore = (k, v) => setScores((s) => ({ ...s, [k]: v }));
+  const allScored = PARADIGM_DIMENSIONS.every((d) => typeof scores[d.key] === "number");
+  const canSave = rater && stage && allScored;
+  return (
+    <>
+      <Card>
+        <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 14px", lineHeight: 1.5 }}>
+          Your own experience of running the program, 1 (hard) – 10 (easy / best).
+        </p>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.inkSoft, marginBottom: 6 }}>Rater</div>
+        <PillRow options={RATING_RATERS} value={rater} onChange={setRater} />
+        <div style={{ height: 14 }} />
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.inkSoft, marginBottom: 6 }}>Stage</div>
+        <PillRow options={PARADIGM_STAGES} value={stage} onChange={setStage} />
+      </Card>
+      <Card>
+        <InfoHint text={facil?.capture?.scoring} />
+        {PARADIGM_DIMENSIONS.map((d) => (
+          <ScaleRow key={d.key} dim={d} value={scores[d.key]} onChange={(v) => setScore(d.key, v)} />
+        ))}
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink, marginBottom: 2 }}>Other things that need attention</div>
+        <div style={{ fontSize: 11.5, color: C.stone, marginBottom: 8, lineHeight: 1.4 }}>Optional — anything to flag for next month.</div>
+        <textarea value={attentionNote} onChange={(e) => setAttentionNote(e.target.value)} rows={3} className="tw-focus" style={{ ...inp, resize: "vertical" }} />
+      </Card>
+      <SaveBar label="Save paradigm ratings" disabled={!canSave}
+        onClick={() => onSave({ paradigm: { rater, stage, scores, attention_note: attentionNote.trim() } })} />
+    </>
+  );
+}
+
+/* ---- Exercise baselines (Akki's baseline count & difficulty per exercise) ---- */
+function ExerciseBaselinesForm({ onSave, physioBank = [], facil }) {
+  const bank = physioBank.filter((ex) => !ex.dormant);
+  const [vals, setVals] = useState({});
+  const [rater, setRater] = useState(null);
+  const [otherRater, setOtherRater] = useState("");
+  const set = (id, field, v) => setVals((s) => ({ ...s, [id]: { ...(s[id] || {}), [field]: v } }));
+  const filled = bank.filter((ex) => vals[ex.id] && vals[ex.id].reps !== "" && vals[ex.id].reps != null);
+  const raterOk = rater && (rater !== "other" || otherRater.trim() !== "");
+  const raterName = rater === "other" ? otherRater.trim() : (BASELINE_RATERS.find((r) => r.key === rater)?.label || "");
+  const canSave = filled.length > 0 && raterOk;
+  return (
+    <>
+      <Card>
+        <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 14px", lineHeight: 1.5 }}>
+          A dated baseline snapshot — Akki's starting count (and how hard it felt) for each exercise. Fill in what you measured today; leave the rest blank. Re-baseline any time to track movement.
+        </p>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.inkSoft, marginBottom: 6 }}>Measured by</div>
+        <PillRow options={BASELINE_RATERS} value={rater} onChange={setRater} />
+        {rater === "other" && (
+          <input value={otherRater} onChange={(e) => setOtherRater(e.target.value)} placeholder="Who took the baseline?"
+            className="tw-focus" style={{ ...inp, marginTop: 9 }} />
+        )}
+        <InfoHint text={facil?.capture?.reading} />
+      </Card>
+      {bank.map((ex) => {
+        const v = vals[ex.id] || {};
+        return (
+          <div key={ex.id} style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 14, padding: "13px 15px", marginBottom: 10 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, marginBottom: ex.instructions ? 3 : 10 }}>{ex.title}</div>
+            {ex.instructions && (
+              <p style={{ fontSize: 12, color: C.inkSoft, margin: "0 0 10px", lineHeight: 1.4 }}>{ex.instructions}</p>
+            )}
+            <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11.5, color: C.inkSoft, marginBottom: 5 }}>Baseline {unitLabel(ex.unit)}</div>
+                <input type="number" min={0} value={v.reps ?? ""} onChange={(e) => set(ex.id, "reps", e.target.value)} className="tw-focus" style={inp} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11.5, color: C.inkSoft, marginBottom: 5 }}>Difficulty (1–10)</div>
+                <input type="number" min={1} max={10} value={v.diff ?? ""} onChange={(e) => set(ex.id, "diff", e.target.value)} className="tw-focus" style={inp} />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      <SaveBar
+        label={filled.length === 0 ? "Fill at least one exercise" : !raterOk ? "Pick who measured it" : `Save baselines · ${filled.length} exercise${filled.length > 1 ? "s" : ""}`}
+        disabled={!canSave}
+        onClick={() => onSave({
+          rater, rater_name: raterName,
+          baselines: filled.map((ex) => ({
+            id: ex.id, title: ex.title, unit: ex.unit,
+            reps: Number(vals[ex.id].reps),
+            diff: vals[ex.id].diff === "" || vals[ex.id].diff == null ? null : Number(vals[ex.id].diff),
+          })),
+        })} />
+    </>
+  );
+}
+
 const FORMS = {
   satco: SATCoForm, tardieu: TardieuForm, goniometry: GoniometryForm, peak_cough_flow: CoughFlowForm,
   tis: TISForm, scim3: SCIMForm, gas: GASForm, fss: FSSForm, cognitive_external: CognitiveForm,
+  performance_ratings: PerformanceRatingsForm, paradigm_ratings: ParadigmRatingsForm,
+  exercise_baselines: ExerciseBaselinesForm,
 };
 
-export function Assessment({ persist, home }) {
+export function Assessment({ persist, home, physioBank = [] }) {
   const [type, setType] = useState(null);
   const [pending, setPending] = useState(null); // collected data awaiting review
   const [saved, setSaved] = useState(false);
@@ -420,7 +664,8 @@ export function Assessment({ persist, home }) {
         <BackBtn onClick={() => setType(null)} label="Assessments" />
         <h2 className="tw-serif" style={{ fontSize: 26, margin: "10px 0 2px" }}>{meta.label}</h2>
         <p style={{ color: C.inkSoft, fontSize: 13.5, margin: "0 0 18px" }}>{meta.cadence} · {meta.blurb}</p>
-        <Form onSave={review} />
+        <HowToRun facil={ASSESSMENT_FACILITATION[type]} />
+        <Form onSave={review} physioBank={physioBank} facil={ASSESSMENT_FACILITATION[type]} />
       </div>
     );
   }

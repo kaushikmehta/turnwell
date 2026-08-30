@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { C, MINUTES_PER_EXERCISE, DAY_PLAN, READINESS_STEPS, previousTrainingDay,
-  validatePositionFlow, positionOrder, categoryOf, montageLabel } from "../constants";
+  validatePositionFlow, positionOrder, categoryOf, montageLabel, unitLabel, INVOLVEMENT } from "../constants";
 import { BackBtn, SectionLabel, Field, inputStyle } from "./shared";
+import { lastSessionExercises } from "./physio/LastSessionRecap";
+
+const invLabel = (score) => (score == null ? null : INVOLVEMENT.find((l) => l.score === score)?.label || `Inv ${score}`);
+const invColor = (score) => (score == null ? C.stone : INVOLVEMENT.find((l) => l.score === score)?.color || C.stone);
 
 let customIdSeq = 0;
 
-export function PhysioSetup({ physioBank, start, back }) {
+export function PhysioSetup({ physioBank, lastSession, start, back }) {
   const [selected, setSelected] = useState([]); // ordered array of exercise objects (seeded or custom)
   const [dualTask, setDualTask] = useState({}); // id -> bool
   const [firstSession, setFirstSession] = useState(false);
@@ -15,12 +19,19 @@ export function PhysioSetup({ physioBank, start, back }) {
 
   // Recall reference — confirmed here at setup, scored live at the opening.
   const prevDay = previousTrainingDay(new Date().getDay());
-  const [recallRef, setRecallRef] = useState(() =>
-    prevDay
+  // Prefer the actual last session's exercises for recall; fall back to the
+  // weekly day-plan heuristic when there's no history yet.
+  const [recallRef, setRecallRef] = useState(() => {
+    const fromLast = lastSession ? lastSessionExercises(lastSession).map((e) => ({ id: e.id, title: e.title })) : [];
+    if (fromLast.length) return fromLast;
+    return prevDay
       ? prevDay.ids.map((id) => physioBank.find((ex) => ex.id === id)).filter(Boolean).map((ex) => ({ id: ex.id, title: ex.title }))
-      : []
-  );
+      : [];
+  });
   const [recallAdding, setRecallAdding] = useState("");
+  // What was actually done last session, keyed by exercise id — used to show the
+  // reps / difficulty / involvement alongside each recall row.
+  const lastById = Object.fromEntries(lastSessionExercises(lastSession).map((e) => [e.id, e]));
   // Warm-up & readiness — the prep tasks, moved off the live priming screen.
   const [readinessDone, setReadinessDone] = useState({});
   const [alertness, setAlertness] = useState("");
@@ -178,7 +189,7 @@ export function PhysioSetup({ physioBank, start, back }) {
       {!firstSession && (
         <div style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16, padding: "14px 16px", marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, marginBottom: 5 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.sage }}>Last session — for recall</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.sage }}>Last session</div>
             {prevDay && (
               <div style={{ fontSize: 11.5, color: C.stone, fontWeight: 600 }}>
                 {prevDay.label.split(" · ")[0]} · {prevDay.daysAgo === 1 ? "yesterday" : `${prevDay.daysAgo} days ago`}
@@ -186,17 +197,32 @@ export function PhysioSetup({ physioBank, start, back }) {
             )}
           </div>
           <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 11px", lineHeight: 1.45 }}>
-            Confirm what was actually worked on last time. At the opening you'll ask Akki to recall these and score each one.
+            What Akki actually did last time — reps, difficulty and involvement. Adjust the list to what you'll ask him to recall at the opening.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {recallRef.map((e) => (
-              <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-                border: `1px solid ${C.line}`, borderRadius: 11, padding: "9px 12px", background: "#fff" }}>
-                <span style={{ fontSize: 13.5, fontWeight: 600, color: C.ink }}>{e.title}</span>
-                <button className="tw-focus" onClick={() => removeRecall(e.id)}
-                  style={{ background: "none", border: "none", color: C.stone, fontSize: 12, fontWeight: 600 }}>Remove</button>
-              </div>
-            ))}
+            {recallRef.map((e) => {
+              const d = lastById[e.id];
+              const inv = d ? invLabel(d.involvement) : null;
+              return (
+                <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                  border: `1px solid ${C.line}`, borderRadius: 11, padding: "9px 12px", background: "#fff" }}>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: C.ink }}>{e.title}</span>
+                    {d ? (
+                      <span style={{ display: "block", fontSize: 11.5, color: C.inkSoft, fontWeight: 600, marginTop: 2 }}>
+                        {d.actReps != null ? `${d.actReps} ${unitLabel(d.unit)}` : "—"}
+                        {d.actDiff != null ? ` · diff ${d.actDiff}/10` : ""}
+                        {inv ? <span style={{ color: invColor(d.involvement) }}>{` · ${inv}`}</span> : ""}
+                      </span>
+                    ) : (
+                      <span style={{ display: "block", fontSize: 11, color: C.stone, marginTop: 2 }}>Not in last session's log — added for recall</span>
+                    )}
+                  </span>
+                  <button className="tw-focus" onClick={() => removeRecall(e.id)}
+                    style={{ background: "none", border: "none", color: C.stone, fontSize: 12, fontWeight: 600, flexShrink: 0 }}>Remove</button>
+                </div>
+              );
+            })}
             {recallRef.length === 0 && (
               <p style={{ fontSize: 12.5, color: C.stone, margin: 0, lineHeight: 1.4 }}>
                 Nothing set — add what was worked on last time, or leave empty to skip recall.
