@@ -3,6 +3,7 @@ import { C, RECALL_RATINGS, emptyStateRatings, compactStateRatings, emptyOpening
 import { SectionLabel } from "../shared";
 import { StateRatings } from "./StateRatings";
 import { OpeningState } from "./OpeningState";
+import { LastSessionRecap } from "./LastSessionRecap";
 
 /* The recall step. The reference list was confirmed at setup — here it's only
    asked and scored, live, on the cue ladder. The middle rung (a category cue)
@@ -47,7 +48,7 @@ function Recall({ refDay, entries, setScore }) {
   );
 }
 
-export function Opening({ items, firstSession, recallRef, onNext }) {
+export function Opening({ items, firstSession, recallRef, lastSession, onNext }) {
   const [starId, setStarId] = useState(null);
   const [before, setBefore] = useState(emptyStateRatings);
   const [state, setState] = useState(emptyOpeningState);
@@ -80,6 +81,10 @@ export function Opening({ items, firstSession, recallRef, onNext }) {
     <div className="tw-rise">
       <SectionLabel>Opening</SectionLabel>
       <h2 className="tw-serif" style={{ fontSize: 26, margin: "0 0 18px" }}>Before you start</h2>
+
+      {!firstSession && (
+        <LastSessionRecap session={lastSession} subtitle="Where you left off last time — remind him, then pick up from here." />
+      )}
 
       {hasRecall && (
         <Recall refDay={recallRef} entries={recallEntries} setScore={setScore} />

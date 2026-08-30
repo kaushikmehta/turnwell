@@ -95,7 +95,7 @@ export function PhysioSession({ config, home, persist, resume }) {
       )}
 
       {phase === "opening" && (
-        <Opening items={items} firstSession={config.firstSession} recallRef={config.recallRef}
+        <Opening items={items} firstSession={config.firstSession} recallRef={config.recallRef} lastSession={config.lastSession}
           onNext={({ star: s, before: b, recall: r, state: st }) => { setStar(s); setBefore(b); setRecall(r); setOpeningState(st); setPhase("estimates"); }} />
       )}
 
