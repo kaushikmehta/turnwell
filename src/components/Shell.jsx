@@ -1,8 +1,44 @@
 import React from "react";
 import { UserButton } from "@clerk/clerk-react";
-import { C } from "../constants";
+import { C, TEST_PATIENT } from "../constants";
 
-export function Shell({ children, center }) {
+// Patient-context switcher shown at the top of every screen. Choosing "Test
+// patient" routes all reads/writes to a separate patient so dry runs / demos
+// flow to the Dashboard without touching the real person's data.
+function PatientBar({ patient, setPatient, patients }) {
+  const isTest = patient === TEST_PATIENT;
+  const accent = isTest ? C.clay : C.sage;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14, paddingRight: 44 }}>
+      <span className="tw-eyebrow" style={{ color: C.inkSoft }}>Working on</span>
+      <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+        <span style={{ width: 8, height: 8, borderRadius: 999, background: accent,
+          position: "absolute", left: 12, pointerEvents: "none" }} />
+        <select className="tw-focus" value={patient} onChange={(e) => setPatient(e.target.value)}
+          aria-label="Active patient"
+          style={{ appearance: "none", WebkitAppearance: "none",
+            border: `1px solid ${isTest ? C.clay : C.line}`, background: isTest ? C.clayTint : C.surface,
+            color: C.ink, borderRadius: 999, padding: "6px 30px 6px 26px",
+            fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>
+          {patients.map((p) => <option key={p} value={p}>{p}</option>)}
+        </select>
+        <span style={{ position: "absolute", right: 12, pointerEvents: "none", color: C.inkSoft, fontSize: 10 }}>▼</span>
+      </div>
+    </div>
+  );
+}
+
+function TestBanner() {
+  return (
+    <div style={{ background: C.clayTint, border: `1px solid ${C.clay}`, borderRadius: 12,
+      padding: "9px 14px", margin: "0 0 18px", fontSize: 13, fontWeight: 600, color: C.clayDeep }}>
+      Test patient · dry run — sessions are saved separately and never affect Akki's real data.
+    </div>
+  );
+}
+
+export function Shell({ children, center, patient, setPatient, patients }) {
+  const showSwitcher = setPatient && patients?.length;
   return (
     <div style={{ minHeight: "100%", background: C.paper, color: C.ink,
       fontFamily: "'Hanken Grotesk', system-ui, sans-serif",
@@ -26,6 +62,8 @@ export function Shell({ children, center }) {
         <div style={{ position: "absolute", top: 18, right: 18, zIndex: 20 }}>
           <UserButton afterSignOutUrl="/" />
         </div>
+        {showSwitcher && <PatientBar patient={patient} setPatient={setPatient} patients={patients} />}
+        {showSwitcher && patient === TEST_PATIENT && <TestBanner />}
         {children}
       </div>
     </div>

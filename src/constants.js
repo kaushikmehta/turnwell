@@ -17,6 +17,16 @@ export const C = {
   indigoTint: "#E4EAEF",
 };
 
+/* ---- patient context ----
+ * The workspace is centred on one real person (Akki), plus a persistent "Test
+ * patient" for dry runs / demos. Test-patient sessions persist normally but
+ * under a separate patient row, so they flow to the Dashboard end-to-end while
+ * never touching Akki's real data. The active choice lives in localStorage.
+ */
+export const DEFAULT_PATIENT = "Akki";
+export const TEST_PATIENT = "Test patient";
+export const PATIENTS = [DEFAULT_PATIENT, TEST_PATIENT];
+
 export const RATINGS = [
   { key: "independent", slug: "independent",   label: "On their own",      note: "Full sentence, no cue",          score: 0, color: C.sage,     tint: C.sageTint },
   { key: "cue1",        slug: "starter-cue",   label: "After a starter",   note: "Needed a sentence starter",      score: 1, color: "#7A9A5B", tint: "#EAF0E0" },

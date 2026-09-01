@@ -49,10 +49,27 @@ export default async function handler(req, res) {
 
   if (req.method === "GET") {
     // Shared workspace: return every member's sessions, not just the caller's.
-    const rows = await db
-      .select()
-      .from(sessions)
-      .orderBy(desc(sessions.performedAt));
+    // Optionally scope to one patient by name (?patient=) so the real person
+    // (Akki) and the "Test patient" keep separate Dashboards/histories. Omitting
+    // the param returns the whole pool (backwards-compatible).
+    const patientName = typeof req.query.patient === "string" ? req.query.patient.trim() : "";
+    const cols = {
+      id: sessions.id,
+      ownerUserId: sessions.ownerUserId,
+      patientId: sessions.patientId,
+      domain: sessions.domain,
+      performedAt: sessions.performedAt,
+      payload: sessions.payload,
+      createdAt: sessions.createdAt,
+    };
+    const rows = patientName
+      ? await db
+          .select(cols)
+          .from(sessions)
+          .innerJoin(patients, eq(sessions.patientId, patients.id))
+          .where(eq(patients.name, patientName))
+          .orderBy(desc(sessions.performedAt))
+      : await db.select(cols).from(sessions).orderBy(desc(sessions.performedAt));
     return res.status(200).json({ sessions: rows });
   }
 

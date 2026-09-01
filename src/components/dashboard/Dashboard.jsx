@@ -40,7 +40,7 @@ function DomainTabs({ domain, setDomain, counts }) {
   );
 }
 
-export function Dashboard({ back, onRecordAssessment }) {
+export function Dashboard({ patient, back, onRecordAssessment }) {
   const { getToken } = useAuth();
   const [rows, setRows] = useState(null); // null = loading
   const [error, setError] = useState(null);
@@ -49,11 +49,12 @@ export function Dashboard({ back, onRecordAssessment }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetchSessions(getToken)
+    setRows(null);
+    fetchSessions(getToken, patient)
       .then((r) => { if (!cancelled) setRows(r); })
       .catch((e) => { if (!cancelled) setError(e.message || "Failed to load"); });
     return () => { cancelled = true; };
-  }, [getToken]);
+  }, [getToken, patient]);
 
   const counts = useMemo(() => {
     const c = {};

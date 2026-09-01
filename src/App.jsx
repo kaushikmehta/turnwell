@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { fetchSessions, saveSession, deleteSession } from "./api";
+import { DEFAULT_PATIENT, PATIENTS } from "./constants";
 import { loadDraft, saveDraft, clearDraft } from "./draft";
 import { seed, seedPhysioExercises, seedReadingPassages } from "./seed";
 import { Shell } from "./components/Shell";
@@ -33,6 +34,20 @@ export default function App() {
   const [readingConfig, setReadingConfig] = useState(null);
   const [resume, setResume] = useState(null); // in-progress state handed to a resumed session
   const [draft, setDraft] = useState(() => loadDraft()); // the saved draft, for Home's Continue card
+  // Active patient context (Akki vs "Test patient"). Sticky across reloads so a
+  // dry run doesn't silently revert to logging against the real person. Every
+  // read is scoped to it and every write is stamped with it.
+  const [patient, setPatientState] = useState(() => {
+    try {
+      const saved = localStorage.getItem("turnwell.patient");
+      if (saved && PATIENTS.includes(saved)) return saved;
+    } catch {}
+    return DEFAULT_PATIENT;
+  });
+  const setPatient = useCallback((next) => {
+    setPatientState(next);
+    try { localStorage.setItem("turnwell.patient", next); } catch {}
+  }, []);
 
   const saveBank = useCallback((next) => setBank(next), []);
 
@@ -78,17 +93,17 @@ export default function App() {
     if (sessionDomain === "physio" && (record?.kind ?? "session") !== "assessment") {
       setPhysioSessions((prev) => [record, ...prev]);
     }
-    saveSession(getToken, sessionDomain, record).catch((err) => {
+    saveSession(getToken, sessionDomain, record, patient).catch((err) => {
       console.error(`Failed to save ${sessionDomain} session:`, err);
     });
-  }, [getToken]);
+  }, [getToken, patient]);
 
   // Load speech-session history from the database on sign-in. (Physio/reading
   // are persisted too, but their in-app history view is the future dashboard.)
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
     let cancelled = false;
-    fetchSessions(getToken)
+    fetchSessions(getToken, patient)
       .then((rows) => {
         if (cancelled) return;
         const speech = rows.filter((r) => r.domain === "speech").map((r) => ({ ...r.payload, id: r.id }));
@@ -101,7 +116,7 @@ export default function App() {
       })
       .catch((err) => console.error("Failed to load sessions:", err));
     return () => { cancelled = true; };
-  }, [isLoaded, isSignedIn, getToken]);
+  }, [isLoaded, isSignedIn, getToken, patient]);
 
   const startRun = (items) => {
     if (!confirmDiscardDraft()) return;
@@ -114,7 +129,7 @@ export default function App() {
     const rec = { at: Date.now(), ...finished };
     setSessions((prev) => [rec, ...prev]);
     // Save, then stamp the DB id onto the local copy so it's immediately deletable.
-    saveSession(getToken, "speech", rec)
+    saveSession(getToken, "speech", rec, patient)
       .then((saved) => {
         if (saved?.id) setSessions((prev) => prev.map((s) => (s === rec ? { ...s, id: saved.id } : s)));
       })
@@ -167,7 +182,7 @@ export default function App() {
   };
 
   return (
-    <Shell>
+    <Shell patient={patient} setPatient={setPatient} patients={PATIENTS}>
       {view === "home" && (
         <Home bank={bank} physioBank={physioBank} readingBank={readingBank} sessions={sessions}
           domain={domain} setDomain={setDomain} go={setView}
@@ -209,7 +224,7 @@ export default function App() {
         <Progress sessions={sessions} remove={removeSession} clear={clearSessions} back={() => setView("home")} />
       )}
       {view === "dashboard" && (
-        <Dashboard back={() => setView("home")} onRecordAssessment={() => setView("assessment")} />
+        <Dashboard patient={patient} back={() => setView("home")} onRecordAssessment={() => setView("assessment")} />
       )}
     </Shell>
   );

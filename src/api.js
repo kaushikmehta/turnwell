@@ -12,8 +12,11 @@ async function authHeaders(getToken) {
 }
 
 // Returns raw DB rows: { id, ownerUserId, patientId, domain, performedAt, payload, createdAt }.
-export async function fetchSessions(getToken) {
-  const res = await fetch(`${BASE}/api/sessions`, { headers: await authHeaders(getToken) });
+// Pass a patientName to scope the results to one patient (Akki vs "Test patient");
+// omit it to get every session in the shared workspace.
+export async function fetchSessions(getToken, patientName) {
+  const qs = patientName ? `?patient=${encodeURIComponent(patientName)}` : "";
+  const res = await fetch(`${BASE}/api/sessions${qs}`, { headers: await authHeaders(getToken) });
   if (!res.ok) throw new Error(`GET /api/sessions failed (${res.status})`);
   const data = await res.json();
   return data.sessions;
