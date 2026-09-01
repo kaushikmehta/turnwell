@@ -7,38 +7,56 @@ import { C, TEST_PATIENT } from "../constants";
 // flow to the Dashboard without touching the real person's data.
 function PatientBar({ patient, setPatient, patients }) {
   const isTest = patient === TEST_PATIENT;
-  const accent = isTest ? C.clay : C.sage;
+  const accent = isTest ? "#fff" : C.sage;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14, paddingRight: 44 }}>
-      <span className="tw-eyebrow" style={{ color: C.inkSoft }}>Working on</span>
+    <div style={{ display: "flex", alignItems: "center", gap: 9, paddingRight: 44 }}>
+      <span className="tw-eyebrow" style={{ color: isTest ? "rgba(255,255,255,.85)" : C.inkSoft }}>Working on</span>
       <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
         <span style={{ width: 8, height: 8, borderRadius: 999, background: accent,
           position: "absolute", left: 12, pointerEvents: "none" }} />
         <select className="tw-focus" value={patient} onChange={(e) => setPatient(e.target.value)}
           aria-label="Active patient"
           style={{ appearance: "none", WebkitAppearance: "none",
-            border: `1px solid ${isTest ? C.clay : C.line}`, background: isTest ? C.clayTint : C.surface,
-            color: C.ink, borderRadius: 999, padding: "6px 30px 6px 26px",
+            border: `1px solid ${isTest ? "rgba(255,255,255,.5)" : C.line}`,
+            background: isTest ? "rgba(255,255,255,.16)" : C.surface,
+            color: isTest ? "#fff" : C.ink, borderRadius: 999, padding: "6px 30px 6px 26px",
             fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>
-          {patients.map((p) => <option key={p} value={p}>{p}</option>)}
+          {patients.map((p) => <option key={p} value={p} style={{ color: C.ink }}>{p}</option>)}
         </select>
-        <span style={{ position: "absolute", right: 12, pointerEvents: "none", color: C.inkSoft, fontSize: 10 }}>▼</span>
+        <span style={{ position: "absolute", right: 12, pointerEvents: "none",
+          color: isTest ? "rgba(255,255,255,.85)" : C.inkSoft, fontSize: 10 }}>▼</span>
       </div>
     </div>
   );
 }
 
-function TestBanner() {
+// Sticky top zone: the switcher stays pinned while scrolling. In test mode the
+// whole strip turns solid clay with a "TEST MODE" flag so the dry-run context is
+// impossible to lose track of, no matter how far down the page you are.
+function StickyBar({ patient, setPatient, patients }) {
+  const isTest = patient === TEST_PATIENT;
   return (
-    <div style={{ background: C.clayTint, border: `1px solid ${C.clay}`, borderRadius: 12,
-      padding: "9px 14px", margin: "0 0 18px", fontSize: 13, fontWeight: 600, color: C.clayDeep }}>
-      Test patient · dry run — sessions are saved separately and never affect Akki's real data.
+    <div style={{ position: "sticky", top: 0, zIndex: 15,
+      margin: "-22px -18px 18px", padding: "12px 18px",
+      background: isTest ? C.clay : C.paper,
+      borderBottom: isTest ? `1px solid ${C.clayDeep}` : `1px solid transparent`,
+      boxShadow: isTest ? "0 6px 16px -10px rgba(0,0,0,.4)" : "none" }}>
+      <PatientBar patient={patient} setPatient={setPatient} patients={patients} />
+      {isTest && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 9,
+          color: "#fff", fontSize: 12.5, fontWeight: 600 }}>
+          <span style={{ background: "#fff", color: C.clayDeep, borderRadius: 6,
+            padding: "2px 7px", fontSize: 11, fontWeight: 800, letterSpacing: ".08em" }}>TEST MODE</span>
+          <span style={{ opacity: .92 }}>Dry run — saved separately, never affects Akki's real data.</span>
+        </div>
+      )}
     </div>
   );
 }
 
 export function Shell({ children, center, patient, setPatient, patients }) {
   const showSwitcher = setPatient && patients?.length;
+  const isTest = showSwitcher && patient === TEST_PATIENT;
   return (
     <div style={{ minHeight: "100%", background: C.paper, color: C.ink,
       fontFamily: "'Hanken Grotesk', system-ui, sans-serif",
@@ -62,10 +80,13 @@ export function Shell({ children, center, patient, setPatient, patients }) {
         <div style={{ position: "absolute", top: 18, right: 18, zIndex: 20 }}>
           <UserButton afterSignOutUrl="/" />
         </div>
-        {showSwitcher && <PatientBar patient={patient} setPatient={setPatient} patients={patients} />}
-        {showSwitcher && patient === TEST_PATIENT && <TestBanner />}
+        {showSwitcher && <StickyBar patient={patient} setPatient={setPatient} patients={patients} />}
         {children}
       </div>
+      {isTest && (
+        <div aria-hidden style={{ position: "fixed", inset: 0, zIndex: 40, pointerEvents: "none",
+          border: `4px solid ${C.clay}`, borderRadius: 2 }} />
+      )}
     </div>
   );
 }
