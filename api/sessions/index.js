@@ -1,11 +1,16 @@
 /*
  * /api/sessions
- *   GET  -> list the signed-in user's sessions, newest first
+ *   GET  -> list ALL sessions in the shared workspace, newest first
  *   POST -> persist a completed session { domain, performedAt, payload, patientName }
  *
- * Every query is scoped to the authenticated Clerk user id.
+ * Shared-workspace model: this is a private tool for one closed care team all
+ * working on a single person, so every signed-in member sees the whole pool.
+ * Auth is still required (you must be a signed-in member), but reads are NOT
+ * scoped to the caller. `ownerUserId` stays on each row purely as an authorship
+ * stamp (who logged it), not as an access boundary. Membership is guarded by
+ * closing Clerk sign-ups / an allowlist once the team is onboarded.
  */
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "../_db.js";
 import { users, patients, sessions } from "../../db/schema.js";
 import { requireUser } from "../_auth.js";
@@ -17,12 +22,17 @@ async function ensureUser(userId, email) {
   await db.insert(users).values({ clerkUserId: userId, email }).onConflictDoNothing();
 }
 
-// Find-or-create the named patient for this owner; returns its id.
+// Find-or-create the shared patient by name. The workspace has one patient
+// shared across the whole team, so we match on name alone (not owner) and reuse
+// the oldest matching row — that keeps every teammate's sessions attached to the
+// same patient instead of spawning a per-account duplicate. Only the very first
+// write for a never-seen name creates a row (owned by whoever wrote it first).
 async function resolvePatientId(userId, name) {
   const existing = await db
     .select({ id: patients.id })
     .from(patients)
-    .where(and(eq(patients.ownerUserId, userId), eq(patients.name, name)))
+    .where(eq(patients.name, name))
+    .orderBy(patients.createdAt)
     .limit(1);
   if (existing.length) return existing[0].id;
   const inserted = await db
@@ -38,10 +48,10 @@ export default async function handler(req, res) {
   const { userId } = auth;
 
   if (req.method === "GET") {
+    // Shared workspace: return every member's sessions, not just the caller's.
     const rows = await db
       .select()
       .from(sessions)
-      .where(eq(sessions.ownerUserId, userId))
       .orderBy(desc(sessions.performedAt));
     return res.status(200).json({ sessions: rows });
   }
